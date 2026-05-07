@@ -1,3 +1,5 @@
-govuk
 .vscode
 .idea
+dist/
+completions/
+govuk-cli
