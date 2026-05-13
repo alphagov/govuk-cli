@@ -26,4 +26,11 @@ jobs:
           echo "Calculated new version: $NEW_VERSION"
           git tag "$NEW_VERSION"
           echo "Pushing new tag: $NEW_VERSION"
-          git push origin "$NEW_VERSION"
+          git push --tags
+  publish:
+    uses: ./.github/workflows/publish.yaml
+    needs: release
+    permissions:
+      contents: write
+    secrets:
+      GOVUK_CI_GITHUB_API_TOKEN: ${{ secrets.GOVUK_CI_GITHUB_API_TOKEN }}
