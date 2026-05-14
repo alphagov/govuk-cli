@@ -3,3 +3,11 @@
 dist/
 completions/
 govuk-cli
+govuk
+govuk-debug
+coverage/integration
+coverage/unit
+coverage/version
+coverage/report
+coverage/report-main
+coverage/merged
