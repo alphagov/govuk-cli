@@ -6,11 +6,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var version string = "dev"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "govuk",
-	Short: "GOV.UK Platform CLI",
-	Long:  `A CLI for interacting with the GOV.UK Platform.`,
+	Use:     "govuk",
+	Short:   "GOV.UK Platform CLI",
+	Long:    `A CLI for interacting with the GOV.UK Platform.`,
+	Version: version,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

@@ -11,6 +11,8 @@ before:
 
 builds:
   - main: main.go
+    ldflags:
+      - -s -w -X github.com/alphagov/govuk-cli/cmd.version={{.Version}}
     env:
       - CGO_ENABLED=0
     goos:
