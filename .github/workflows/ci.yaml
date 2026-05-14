@@ -1,0 +1,21 @@
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".git**"
+      - README.md
+      - docs
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test-go:
+    name: Test Go
+    uses: alphagov/govuk-infrastructure/.github/workflows/go-test.yml@main
+    permissions:
+      packages: write
+      pull-requests: write
