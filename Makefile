@@ -5,7 +5,7 @@ govuk: ${go_files}
 
 govuk-debug: ${go_files}
 	env $(GO_BUILD_ENV) go build -o govuk-debug -cover -covermode atomic main.go
-	# GOCOVERDIR=coverage/version ./govuk-debug -version # Currently we don't have a -version flag, uncomment this when we do
+	GOCOVERDIR=coverage/version ./govuk-debug --version
  
 .PHONY: clean
 clean:

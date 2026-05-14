@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 )
 
-func cliCmd(ctx context.Context) (*exec.Cmd, error) {
-	cmd := exec.CommandContext(ctx, "../govuk-debug")
+func cliCmd(ctx context.Context, args ...string) (*exec.Cmd, error) {
+	cmd := exec.CommandContext(ctx, "../govuk-debug", args...)
 
 	coverageDir, err := getCoverageDir()
 	if err != nil {

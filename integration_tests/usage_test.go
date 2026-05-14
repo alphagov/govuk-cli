@@ -20,12 +20,30 @@ var _ = Describe("Usage", func() {
 		})
 	})
 
-	Context("when executed with an invalid argument", func() {
-		It("Exist unsuccessfully", func() {
+	Context("when executed with the version flag", func() {
+		It("exits successfully", func() {
 			cmd, err := cliCmd(context.Background())
 			Expect(err).NotTo(HaveOccurred())
 
-			cmd.Args = append(cmd.Args, "--wibble")
+			err = cmd.Run()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("prints out the version", func() {
+			cmd, err := cliCmd(context.Background(), "--version")
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(output).To(ContainSubstring("govuk version dev"))
+		})
+	})
+
+	Context("when executed with an invalid argument", func() {
+		It("exits unsuccessfully", func() {
+			cmd, err := cliCmd(context.Background(), "--wibble")
+			Expect(err).NotTo(HaveOccurred())
+
 			err = cmd.Run()
 			Expect(err).To(HaveOccurred())
 
