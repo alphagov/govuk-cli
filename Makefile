@@ -1,16 +1,32 @@
-go_files := $(shell find . -type f -name '*.go') go.mod go.sum
+.DEFAULT: govuk
 
-govuk: ${go_files}
+go_files := $(shell find . -type f -name '*.go') go.mod go.sum
+go_vendor_files := $(shell find . -type f -name "*.go" -path "./vendor/*")
+
+##
+# Building
+# Targets for building the project
+##
+
+govuk: ${go_files} vendor
 	go build -o govuk main.go
 
 govuk-debug: ${go_files}
 	env $(GO_BUILD_ENV) go build -o govuk-debug -cover -covermode atomic main.go
 	GOCOVERDIR=coverage/version ./govuk-debug --version
- 
+
 .PHONY: clean
 clean:
 	rm -f govuk govuk-debug
 	rm -f coverage/*/covmeta.* coverage/*/covcounters.* coverage/report/*.* coverage/report-main/*.*
+
+vendor: ${go_vendor_files}
+	go mod vendor
+
+##
+# Testing
+# Targets for different types of test for the project
+##
 
 .PHONY: unit_tests
 unit_tests:
@@ -20,7 +36,7 @@ unit_tests:
 .PHONY: integration_tests
 integration_tests: govuk-debug
 	go test -race -v ./integration_tests
-		
+
 .PHONY: coverage_report
 coverage_report:
 	go tool covdata merge -i coverage/unit,coverage/integration/,coverage/version -o coverage/merged/

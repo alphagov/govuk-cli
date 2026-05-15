@@ -2,6 +2,7 @@
 .idea
 dist/
 completions/
+vendor/
 govuk-cli
 govuk
 govuk-debug
