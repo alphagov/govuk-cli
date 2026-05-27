@@ -5,5 +5,12 @@
       "helpers:pinGitHubActionDigests"
   ],
   "enabledManagers": ["github-actions"],
-  "minimumReleaseAge": "10 days"
+  "minimumReleaseAge": "10 days",
+  "packageRules": [
+    {
+      "matchPackageNames": ["alphagov/govuk-infrastructure"],
+      "matchDepTypes": ["action"],
+      "enabled": false
+    }
+  ]
 }
