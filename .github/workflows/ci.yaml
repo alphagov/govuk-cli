@@ -17,7 +17,7 @@ concurrency:
 jobs:
   test-go:
     name: Test Go
-    uses: alphagov/govuk-infrastructure/.github/workflows/go-test.yml@main
+    uses: alphagov/govuk-infrastructure/.github/workflows/go-test.yml@2c589c90c0b74d6fada0f8f350698702f4b3a0cb # main
     permissions:
       packages: write
       pull-requests: write
@@ -37,6 +37,6 @@ jobs:
 
   codeql-sast:
     name: CodeQL SAST scan
-    uses: alphagov/govuk-infrastructure/.github/workflows/codeql-analysis.yml@main
+    uses: alphagov/govuk-infrastructure/.github/workflows/codeql-analysis.yml@2c589c90c0b74d6fada0f8f350698702f4b3a0cb # main
     permissions:
       security-events: write
