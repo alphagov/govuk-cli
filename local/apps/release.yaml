@@ -1,0 +1,18 @@
+name: release
+values:
+  env:
+    - name: DATABASE_URL
+      value: mysql://mysql:password@release-mysql:3306/app
+    - name: SECRET_KEY_BASE
+      value: something
+  preStartHooks:
+    - name: db-prepare
+      command: [bundle, exec, rails, db:prepare]
+services:
+  - name: release-mysql
+    kind: mysql
+    values:
+      version: 8.4
+      diskSizeGb: 1
+dependencies:
+  - signon

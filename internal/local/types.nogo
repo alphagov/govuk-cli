@@ -1,0 +1,68 @@
+func ApplicationRoots(defs map[string]*ApplicationDefinition) []string {
+	isDep := make(map[string]bool)
+	for _, def := range defs {
+		for _, dep := range def.Dependencies {
+			isDep[dep] = true
+		}
+	}
+	var roots []string
+	for name := range defs {
+		if !isDep[name] {
+			roots = append(roots, name)
+		}
+	}
+	sort.Strings(roots)
+	return roots
+}
+
+func ResolveApplication(name string, defs map[string]*ApplicationDefinition) (*Application, error) {
+	return resolveApplication(name, defs, map[string]bool{})
+}
+
+func EnsureApplication(app Application, restConfig *rest.Config) error {
+	for _, dep := range app.Dependencies {
+		err := EnsureApplication(dep, restConfig)
+		if err != nil {
+			return err
+		}
+	}
+	HelmChartEnsure(
+		app.Name,
+		"app",
+		"generic",
+		map[string]any{
+			"imageRepo":     fmt.Sprintf("alphagov/govuk/%s", app.Name),
+			"imageTag":      "v2727",
+			"env":           app.EnvVars,
+			"preStartHooks": app.PreStartHooks,
+		},
+		restConfig,
+	)
+}
+
+func resolveApplication(name string, defs map[string]*ApplicationDefinition, onPath map[string]bool) (*Application, error) {
+	def, ok := defs[name]
+	if !ok {
+		return nil, fmt.Errorf("unknown application %q", name)
+	}
+	if onPath[name] {
+		return nil, fmt.Errorf("dependency cycle detected at %q", name)
+	}
+	onPath[name] = true
+	defer delete(onPath, name)
+
+	app := &Application{
+		Name:          def.Name,
+		Services:      def.Services,
+		EnvVars:       def.EnvVars,
+		PreStartHooks: def.PreStartHooks,
+	}
+	for _, depName := range def.Dependencies {
+		dep, err := resolveApplication(depName, defs, onPath)
+		if err != nil {
+			return nil, err
+		}
+		app.Dependencies = append(app.Dependencies, *dep)
+	}
+	return app, nil
+}

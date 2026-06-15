@@ -1,0 +1,5 @@
+registryHost: k3d-govuk-local-registry:2012
+imageRepo: alphagov/govuk/signon
+imageTag: v2727
+env: []
+preStartHooks: []

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: app
+          image: {{ .Values.registryHost }}/{{ .Values.imageRepo }}:{{ .Values.imageTag }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DEVISE_SECRET_KEY
+              value: unused
+            - name: DEVISE_PEPPER
+              value: unused
+            - name: PORT
+              value: "3000"
+            {{- .Values.env | toYaml | trim | nindent 12 }}

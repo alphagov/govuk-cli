@@ -1,0 +1,4 @@
+imageUri: postgres
+# used as image tag
+version: 18
+disk_size_gb: 0.5

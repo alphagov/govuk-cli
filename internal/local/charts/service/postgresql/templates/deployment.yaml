@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: postgresql
+          image: {{ .Values.imageUri }}:{{ .Values.version }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              value: password
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/postgresql
+      volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data

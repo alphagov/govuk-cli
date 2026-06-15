@@ -1,0 +1,32 @@
+name: signon
+values:
+  env:
+    - name: DATABASE_URL
+      value: mysql://mysql:password@signon-mysql:3306/app
+    - name: REDIS_URL
+      value: redis://signon-redis
+    - name: SECRET_KEY_BASE
+      value: something
+    - name: GOVUK_APP_DOMAIN_EXTERNAL
+      value: govuk.localhost:2012
+    - name: GOVUK_WEBSITE_ROOT
+      value: www.govuk.localhost
+    - name: GOVUK_APP_DOMAIN
+      value: govuk.localhost
+    - name: RAILS_ENV
+      value: test
+  preStartHooks:
+    - name: db-prepare
+      command: [bundle, exec, rails, db:prepare]
+services:
+  - name: signon-mysql
+    kind: mysql
+    values:
+      version: 8.4
+      diskSizeGb: 1
+#  - name: signon-redis
+#    kind: redis
+#    values:
+#      version: 7
+#      diskSizeGb: 1
+dependencies: []

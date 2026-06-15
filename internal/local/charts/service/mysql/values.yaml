@@ -1,0 +1,4 @@
+imageUri: mysql
+# used as image tag
+version: 8.4
+diskSizeGb: 0.5

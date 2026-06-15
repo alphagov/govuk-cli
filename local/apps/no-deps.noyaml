@@ -1,0 +1,16 @@
+name: no-deps
+imageRepo: some/thing
+imageTag: v1234
+values:
+  env:
+    - name: DATABASE_URL
+      value: something
+  preStartHooks:
+    - name: db-prepare
+      command: "bundle exec rails db:prepare"
+services:
+  - name: no-deps-postgresql
+    kind: postgresql
+    values:
+      version: 18
+      diskSizeGb: 1

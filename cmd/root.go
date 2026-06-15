@@ -3,6 +3,8 @@ package cmd
 import (
 	"os"
 
+	l "github.com/alphagov/govuk-cli/internal/logger"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -38,4 +40,7 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	l.Log().SetLevel(logrus.DebugLevel)
+	l.Log().SetOutput(os.Stderr)
 }
