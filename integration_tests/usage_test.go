@@ -35,7 +35,7 @@ var _ = Describe("Usage", func() {
 
 			output, err := cmd.CombinedOutput()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(output).To(ContainSubstring("govuk version dev"))
+			Expect(string(output)).To(ContainSubstring("govuk-cli version dev"))
 		})
 	})
 

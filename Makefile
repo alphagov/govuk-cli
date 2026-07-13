@@ -19,7 +19,7 @@ unit_tests:
 
 .PHONY: integration_tests
 integration_tests: govuk-debug
-	go test -race -v ./integration_tests
+	KUBEBUILDER_ASSETS="$$(setup-envtest use -p path)" go test -race -v ./integration_tests
 		
 .PHONY: coverage_report
 coverage_report:

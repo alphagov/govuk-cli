@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"charm.land/log/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +11,7 @@ var version string = "dev"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "govuk",
+	Use:     "govuk-cli",
 	Short:   "GOV.UK Platform CLI",
 	Long:    `A CLI for interacting with the GOV.UK Platform.`,
 	Version: version,
@@ -38,4 +39,5 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	log.SetLevel(log.DebugLevel)
 }
