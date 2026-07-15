@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"charm.land/log/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -10,13 +11,29 @@ var version string = "dev"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "govuk",
+	Use:     "govuk-cli",
 	Short:   "GOV.UK Platform CLI",
 	Long:    `A CLI for interacting with the GOV.UK Platform.`,
 	Version: version,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		logLevel, err := cmd.Flags().GetString("log-level")
+		if err != nil {
+			return err
+		}
+		switch logLevel {
+		case "debug":
+			log.SetLevel(log.DebugLevel)
+		case "info":
+			log.SetLevel(log.InfoLevel)
+		case "warn":
+			log.SetLevel(log.WarnLevel)
+		case "error":
+			log.SetLevel(log.ErrorLevel)
+		default:
+			log.Warn("unknown log level provided. Defaulting to info", "logLevel", logLevel)
+		}
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -29,13 +46,5 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.govuk-cli.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "Log level (debug, info, warn or error)")
 }
