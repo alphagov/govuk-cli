@@ -374,6 +374,25 @@ func createJobRequestReview(ctx context.Context, jrr *jrv1.JobRequestReview) err
 	return err
 }
 
+// getJobRequestReview fetches a JobRequestReview by name from the test cluster,
+// so tests can assert on the fields the CLI actually persisted rather than just
+// its printed output.
+func getJobRequestReview(ctx context.Context, name string, namespace string) (*jrv1.JobRequestReview, error) {
+	u, err := dynamicClient.
+		Resource(jrv1.SchemeGroupVersion.WithResource("jobrequestreviews")).
+		Namespace(namespace).
+		Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	jrr := &jrv1.JobRequestReview{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, jrr); err != nil {
+		return nil, err
+	}
+	return jrr, nil
+}
+
 func deleteJobRequestReview(ctx context.Context, jrr *jrv1.JobRequestReview) error {
 	return dynamicClient.
 		Resource(jrv1.SchemeGroupVersion.WithResource("jobrequestreviews")).
