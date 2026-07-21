@@ -49,7 +49,7 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 			return nil, err
 		}
 		switch jr.Status.State {
-		case "Approved", "Started", "Completed", "Failed":
+		case "Approved", "Started", "Complete", "Failed":
 			log.Debug("job request state is actionable",
 				"jr", jobRequestName,
 				"state", jr.Status.State,
