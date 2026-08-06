@@ -35,15 +35,15 @@ var (
 
 // kwokctl runs a kwokctl command against the test cluster.
 func kwokctl(args ...string) ([]byte, error) {
-	kwokctlArgs := append([]string{"--name", clusterName}, args...)
-	cmd := exec.Command("kwokctl", kwokctlArgs...)
+	kwokctlArgs := append([]string{"tool", "kwokctl", "--name", clusterName}, args...)
+	cmd := exec.Command("go", kwokctlArgs...)
 	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			return nil, fmt.Errorf("kwokctl %s: %w\n%s", strings.Join(kwokctlArgs, " "), err, exitErr.Stderr)
+			return nil, fmt.Errorf("go %s: %w\n%s", strings.Join(kwokctlArgs, " "), err, exitErr.Stderr)
 		}
-		return nil, fmt.Errorf("kwokctl %s: %w", strings.Join(kwokctlArgs, " "), err)
+		return nil, fmt.Errorf("go %s: %w", strings.Join(kwokctlArgs, " "), err)
 	}
 	return out, nil
 }
