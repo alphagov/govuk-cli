@@ -11,3 +11,11 @@ func TestEverything(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration test suite")
 }
+
+var _ = BeforeSuite(func() {
+	Expect(startTestCluster()).To(Succeed())
+})
+
+var _ = AfterSuite(func() {
+	Expect(stopTestCluster()).To(Succeed())
+})
