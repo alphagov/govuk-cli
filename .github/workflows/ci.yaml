@@ -17,65 +17,10 @@ concurrency:
 jobs:
   test-go:
     name: Test Go
-    runs-on: ubuntu-latest
+    uses: alphagov/govuk-infrastructure/.github/workflows/go-test.yml@main
     permissions:
       packages: write
       pull-requests: write
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          show-progress: false
-      - name: Setup Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        with:
-          go-version-file: go.mod
-      - name: Set up kwok
-        uses: kubernetes-sigs/kwok@156033d7df7ea0e09cea82b715fe566ea68aeeb4 # v0.8.0
-        with:
-          command: kwokctl
-      - name: Unit tests
-        run: make unit_tests
-      - name: Integration Tests
-        run: make integration_tests
-        timeout-minutes: 15
-      - name: Download coverage report from main
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          # Download coverage report (they expire after 90 days, so don't fail if there isn't one)
-          if ! gh run download --name coverage-report-main --dir coverage/report-main/; then
-            echo "Failed to download coverage report artifact 'coverage-report-main', continuing anyway"
-          fi
-      - name: Generate coverage report
-        run: make coverage_report
-      - name: Post PR Comment with Coverage
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.number }}
-        run: |
-          set -euo pipefail
-
-          # Clear any previous comment
-          gh pr comment "${PR_NUMBER}" --delete-last --yes || true
-
-          # Post updated coverage report
-          gh pr comment "${PR_NUMBER}" --body-file coverage/report/overall-coverage.md
-      - name: Upload coverage report artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        with:
-          name: coverage-report-main
-          path: coverage/report/
-          if-no-files-found: error
-          retention-days: 90
-          overwrite: true
-          include-hidden-files: false
-          archive: true
 
   golangci-lint:
     runs-on: ubuntu-latest
