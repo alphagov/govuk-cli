@@ -49,7 +49,7 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 			return nil, err
 		}
 		switch jr.Status.State {
-		case "Approved", "Started", "Complete", "Failed":
+		case jrv1.JobRequestApproved, jrv1.JobRequestStarted, jrv1.JobRequestComplete, jrv1.JobRequestFailed:
 			log.Debug("job request state is actionable",
 				"jr", jobRequestName,
 				"state", jr.Status.State,
@@ -60,13 +60,13 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 			} else {
 				return nil, fmt.Errorf("job request '%s' is in actionable state with no jobName", jobRequestName)
 			}
-		case "Rejected":
+		case jrv1.JobRequestRejected:
 			log.Debug("job request rejected", "jr", jobRequestName)
 			return nil, fmt.Errorf("job request '%s' has been rejected", jobRequestName)
-		case "Malformed":
+		case jrv1.JobRequestMalformed:
 			log.Debug("job request malformed", "jr", jobRequestName)
 			return nil, errors.New("malformed job request resource")
-		case "Pending":
+		case jrv1.JobRequestPending:
 			log.Debug("job request pending", "jr", jobRequestName)
 			continue
 		}
