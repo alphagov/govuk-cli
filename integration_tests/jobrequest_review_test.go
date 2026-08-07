@@ -42,7 +42,7 @@ var _ = Describe("jobrequest review", func() {
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Approved"
+			jr.Status.State = jrv1.JobRequestApproved
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -89,7 +89,7 @@ var _ = Describe("jobrequest review", func() {
 	// confirmation from stdin, one line each. A trailing "y" confirms the
 	// submission so the JobRequestReview is actually created.
 	DescribeTable("accepting a decision and its alias",
-		func(ctx SpecContext, jobRequestName string, stdin string, expectedDecision string) {
+		func(ctx SpecContext, jobRequestName string, stdin string, expectedDecision jrv1.JobRequestReviewState) {
 			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -116,12 +116,12 @@ var _ = Describe("jobrequest review", func() {
 			jrr, err := getJobRequestReview(ctx, reviewName, namespace)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(jrr.Spec.JobRequestName).To(Equal(jobRequestName))
-			Expect(jrr.Spec.Decision).To(Equal(expectedDecision))
+			Expect(jrr.Spec.Decision).To(Equal(string(expectedDecision)))
 		},
-		Entry("accepts 'a' to approve", "review-approve-short", "a\nlooks good\ny\n", "Approved"),
-		Entry("accepts 'approve' to approve", "review-approve-long", "approve\nlooks good\ny\n", "Approved"),
-		Entry("accepts 'r' to reject", "review-reject-short", "r\nnot now\ny\n", "Rejected"),
-		Entry("accepts 'reject' to reject", "review-reject-long", "reject\nnot now\ny\n", "Rejected"),
+		Entry("accepts 'a' to approve", "review-approve-short", "a\nlooks good\ny\n", jrv1.JobRequestReviewApproved),
+		Entry("accepts 'approve' to approve", "review-approve-long", "approve\nlooks good\ny\n", jrv1.JobRequestReviewApproved),
+		Entry("accepts 'r' to reject", "review-reject-short", "r\nnot now\ny\n", jrv1.JobRequestReviewRejected),
+		Entry("accepts 'reject' to reject", "review-reject-long", "reject\nnot now\ny\n", jrv1.JobRequestReviewRejected),
 	)
 
 	Context("when an invalid decision is entered", func() {
@@ -155,7 +155,7 @@ var _ = Describe("jobrequest review", func() {
 
 			jrr, err := getJobRequestReview(ctx, "jrr-"+jobRequestName, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(jrr.Spec.Decision).To(Equal("Approved"))
+			Expect(jrr.Spec.Decision).To(Equal(string(jrv1.JobRequestReviewApproved)))
 		})
 	})
 
@@ -217,7 +217,7 @@ var _ = Describe("jobrequest review", func() {
 
 			jrr, err := getJobRequestReview(ctx, "jrr-"+jobRequestName, namespace)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(jrr.Spec.Decision).To(Equal("Approved"))
+			Expect(jrr.Spec.Decision).To(Equal(string(jrv1.JobRequestReviewApproved)))
 		})
 	})
 })
