@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -127,7 +128,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("exits with a rejected error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Rejected"
+			jr.Status.State = jrv1.JobRequestRejected
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -150,7 +151,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("exits with a malformed error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Malformed"
+			jr.Status.State = jrv1.JobRequestMalformed
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -174,7 +175,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("detects the actionable state and starts watching the Job", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Approved"
+			jr.Status.State = jrv1.JobRequestApproved
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -203,7 +204,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("exits with a job deleted error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -244,7 +245,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("finishes the Job watch loop", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -287,7 +288,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("exits with a no pods found error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -328,7 +329,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("exits with a pod deleted error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -378,7 +379,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 		It("finishes the Pod watch loop and starts tailing logs", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -450,7 +451,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			})
 
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 

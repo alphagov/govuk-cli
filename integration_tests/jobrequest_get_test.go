@@ -32,7 +32,7 @@ func pendingJobRequest(name string, namespace string) *jrv1.JobRequest {
 			Args:    []string{"hello"},
 		},
 		Status: jrv1.JobRequestStatus{
-			State: "Pending",
+			State: jrv1.JobRequestPending,
 		},
 	}
 }
@@ -50,7 +50,7 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 		},
 		Spec: jrv1.JobRequestReviewSpec{
 			JobRequestName: jobRequestName,
-			Decision:       "Approved",
+			Decision:       string(jrv1.JobRequestReviewApproved),
 		},
 	}
 }
@@ -82,7 +82,7 @@ var _ = Describe("jobrequest get", func() {
 					Args:    []string{"hello"},
 				},
 				Status: jrv1.JobRequestStatus{
-					State: "Pending",
+					State: jrv1.JobRequestPending,
 				},
 			}
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -101,7 +101,7 @@ var _ = Describe("jobrequest get", func() {
 
 			Expect(string(output)).To(ContainSubstring(jobRequestName))
 			Expect(string(output)).To(ContainSubstring("echo hello"))
-			Expect(string(output)).To(ContainSubstring("Pending"))
+			Expect(string(output)).To(ContainSubstring(string(jrv1.JobRequestPending)))
 			Expect(string(output)).To(ContainSubstring("some.user (platformengineer)"))
 			Expect(string(output)).To(ContainSubstring("deployment/publishing-api"))
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
@@ -215,7 +215,7 @@ var _ = Describe("jobrequest get", func() {
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Status.State = "Started"
+			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -331,7 +331,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
 			Expect(string(output)).To(ContainSubstring("reviewer.user (platformengineer)"))
-			Expect(string(output)).To(MatchRegexp(`Review Decision\s*│\s*Approved\s*│`))
+			Expect(string(output)).To(MatchRegexp(`Review Decision\s*│\s*%s\s*│`, jrv1.JobRequestReviewApproved))
 		})
 	})
 

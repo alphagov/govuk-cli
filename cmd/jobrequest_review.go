@@ -99,7 +99,7 @@ use the --follow flag.`,
 
 		confirmT := style.KVTable()
 		confirmT.Row("Job Request Name", jr.Name)
-		confirmT.Row("Decision", decision)
+		confirmT.Row("Decision", string(decision))
 		confirmT.Row("Comment", comment)
 
 		_, err = lipgloss.Println(confirmT)
@@ -119,7 +119,7 @@ use the --follow flag.`,
 			},
 			Spec: jrv1.JobRequestReviewSpec{
 				JobRequestName: jr.Name,
-				Decision:       decision,
+				Decision:       string(decision),
 				Description:    comment,
 			},
 		}
@@ -147,8 +147,8 @@ func init() {
 }
 
 // Prompt the user to approve or reject the request.
-// Returns either "Approved" or "Rejected"
-func parseDecisionInput(reader *bufio.Reader) string {
+// Returns either JobRequestReviewApproved or JobRequestReviewRejected
+func parseDecisionInput(reader *bufio.Reader) jrv1.JobRequestReviewState {
 	for {
 		_, err := lipgloss.Printf("Review options: %spprove %seject\n", style.BoldStyle.Render("[A]"), style.BoldStyle.Render("[R]"))
 		cobra.CheckErr(err)
@@ -164,9 +164,9 @@ func parseDecisionInput(reader *bufio.Reader) string {
 
 		switch strippedInput {
 		case "a", "approve":
-			return "Approved"
+			return jrv1.JobRequestReviewApproved
 		case "r", "reject":
-			return "Rejected"
+			return jrv1.JobRequestReviewRejected
 		default:
 			log.Error("Only 'approve' and 'reject' are valid decisions", "providedDecision", strippedInput)
 		}

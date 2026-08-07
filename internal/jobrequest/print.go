@@ -41,7 +41,7 @@ func (c *JobRequestClient) JobRequestDetailsKVTable(jr *jrv1.JobRequest) (*table
 	t.Row("Job Request Name", jr.Name)
 	t.Row("Command", fmt.Sprintf("%s %s", jr.Spec.Command, shellescape.QuoteCommand(jr.Spec.Args)))
 	t.Row("Source Workload", sourceWorkload)
-	t.Row("Status", state)
+	t.Row("Status", string(state))
 	t.Row("Requested By", requestedBy)
 
 	return t, nil
