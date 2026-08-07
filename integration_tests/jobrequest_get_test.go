@@ -1,7 +1,6 @@
 package integration_tests
 
 import (
-	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -45,7 +44,7 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jobrequest.ReviewedByAnnotation: "arn:aws:sts::1234:assumed-role/reviewer.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestReviewReviewedByAnnotation: "arn:aws:sts::1234:assumed-role/reviewer.user-platformengineer/test-platformengineer",
 			},
 		},
 		Spec: jrv1.JobRequestReviewSpec{
@@ -346,7 +345,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			jrr := approvedJobRequestReview(reviewName, namespace, jobRequestName)
-			jrr.Annotations[jobrequest.ReviewedByAnnotation] = "not-a-valid-arn"
+			jrr.Annotations[jrv1.JobRequestReviewReviewedByAnnotation] = "not-a-valid-arn"
 			Expect(createJobRequestReview(ctx, jrr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {

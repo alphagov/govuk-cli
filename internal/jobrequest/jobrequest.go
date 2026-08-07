@@ -16,8 +16,6 @@ import (
 const JobRequestResourceName = "jobrequests"
 const JobRequestReviewResourceName = "jobrequestreviews"
 
-const ReviewedByAnnotation = "platform.publishing.service.gov.uk/reviewed-by"
-
 type JobRequestClient struct {
 	namespace     string
 	dynamicClient *dynamic.DynamicClient

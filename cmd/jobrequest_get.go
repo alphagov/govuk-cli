@@ -70,8 +70,8 @@ tail logs for the resulting job, use the --follow flag.`,
 				log.Warn("Error getting JobRequestReview resource", "error", err, "jobRequestReviewName", jr.Status.ReviewName)
 				reviewedBy = "[Error getting JobRequestReview]"
 			} else {
-				reviewedByAnnotation, isOk := jrr.Annotations[jobrequest.ReviewedByAnnotation]
-				if !isOk {
+				reviewedByAnnotation, err := jrr.GetReviewedBy()
+				if err != nil {
 					reviewedBy = "[Review has no reviewed-by annotation]"
 				} else {
 					reviewedArn, err := jobrequest.ParseAssumedRoleArn(reviewedByAnnotation)
