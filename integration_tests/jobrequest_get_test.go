@@ -16,7 +16,7 @@ func pendingJobRequest(name string, namespace string) *jrv1.JobRequest {
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jobrequest.RequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
 			},
 		},
 		Spec: jrv1.JobRequestSpec{
@@ -66,7 +66,7 @@ var _ = Describe("jobrequest get", func() {
 					Name:      jobRequestName,
 					Namespace: namespace,
 					Annotations: map[string]string{
-						jobrequest.RequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
+						jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
 					},
 				},
 				Spec: jrv1.JobRequestSpec{
@@ -125,7 +125,7 @@ var _ = Describe("jobrequest get", func() {
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
-			jr.Annotations[jobrequest.RequestedByAnnotation] = "not-a-valid-arn"
+			jr.Annotations[jrv1.JobRequestRequestedByAnnotation] = "not-a-valid-arn"
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {

@@ -12,8 +12,8 @@ import (
 
 // get a lipgloss table filled with details of a JobRequest resource
 func (c *JobRequestClient) JobRequestDetailsKVTable(jr *jrv1.JobRequest) (*table.Table, error) {
-	requestedBy, isOk := jr.Annotations[RequestedByAnnotation]
-	if !isOk {
+	requestedBy, err := jr.GetRequestedBy()
+	if err != nil {
 		requestedBy = "-"
 	}
 

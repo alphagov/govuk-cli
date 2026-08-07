@@ -16,7 +16,6 @@ import (
 const JobRequestResourceName = "jobrequests"
 const JobRequestReviewResourceName = "jobrequestreviews"
 
-const RequestedByAnnotation = "platform.publishing.service.gov.uk/requested-by"
 const ReviewedByAnnotation = "platform.publishing.service.gov.uk/reviewed-by"
 
 type JobRequestClient struct {
