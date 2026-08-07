@@ -8,7 +8,7 @@ require (
 	al.essio.dev/pkg/shellescape v1.6.0
 	charm.land/lipgloss/v2 v2.0.0
 	charm.land/log/v2 v2.0.0-20260226140535-70af10b757e1
-	github.com/alphagov/govuk-job-request-operator v0.0.7
+	github.com/alphagov/govuk-job-request-operator v0.0.8
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
 	github.com/spf13/cobra v1.10.2
