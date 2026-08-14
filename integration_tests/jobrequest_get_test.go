@@ -15,7 +15,7 @@ func pendingJobRequest(name string, namespace string) *jrv1.JobRequest {
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::123456789012:assumed-role/some.user-platformengineer/test-platformengineer",
 			},
 		},
 		Spec: jrv1.JobRequestSpec{
@@ -44,7 +44,7 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jrv1.JobRequestReviewReviewedByAnnotation: "arn:aws:sts::1234:assumed-role/reviewer.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestReviewReviewedByAnnotation: "arn:aws:sts::123456789012:assumed-role/reviewer.user-platformengineer/test-platformengineer",
 			},
 		},
 		Spec: jrv1.JobRequestReviewSpec{
@@ -65,7 +65,7 @@ var _ = Describe("jobrequest get", func() {
 					Name:      jobRequestName,
 					Namespace: namespace,
 					Annotations: map[string]string{
-						jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
+						jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::123456789012:assumed-role/some.user-platformengineer/test-platformengineer",
 					},
 				},
 				Spec: jrv1.JobRequestSpec{
