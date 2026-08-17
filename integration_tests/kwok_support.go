@@ -48,6 +48,20 @@ func kwokctl(args ...string) ([]byte, error) {
 	return out, nil
 }
 
+func kubectl(ctx context.Context, args ...string) (string, error) {
+	kubectlArgs := append([]string{"--kubeconfig", kubeconfigPath}, args...)
+
+	cmd := exec.CommandContext(context.Background(), "kubectl", kubectlArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(output), fmt.Errorf(
+			"%q failed with error %q: %w", strings.Join(cmd.Args, " "), string(output), err,
+		)
+	}
+
+	return string(output), nil
+}
+
 // operatorCRDPath resolves the path to the CRD manifests shipped inside the
 // govuk-job-request-operator module.
 func operatorCRDPath() (string, error) {
