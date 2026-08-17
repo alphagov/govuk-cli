@@ -133,7 +133,11 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	}
 
 	roleBindingManifestFilePath := filepath.Join(tempDir, "role_bindings.yaml")
-	renderTemplate("user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
+	err = renderTemplate("user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
+	if err != nil {
+		return err
+	}
+
 	err = applyKubernetesManifest(ctx, roleBindingManifestFilePath)
 	if err != nil {
 		return err
@@ -142,23 +146,25 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	return nil
 }
 
-func DeleteKubernetesUsersFromKubeconfig(ctx context.Context) {
+func DeleteKubernetesUsersFromKubeconfig(ctx context.Context) error {
 	for _, user := range *KubernetesUsers {
 		cmd := exec.CommandContext(ctx, "kubectl", "config", "delete-user", user.KubectlUserName)
 		_, err := runCmd(cmd)
 		// This is only called in shutdown, and we don't want to fail the suite shutdown if this errors, so don't Expect success
 		if err != nil {
-			fmt.Sprintf("Failed to delete user %s from kubectl config", user.KubectlUserName)
+			return fmt.Errorf("failed to delete user %s from kubectl config, error was %s", user.KubectlUserName, err.Error())
 		}
 	}
+
+	return nil
 }
 
-func SwitchToKubernetesAdminUser() {
-	switchToUser("kwok-admin")
+func SwitchToKubernetesAdminUser() error {
+	return switchToUser("kwok-admin")
 }
 
-func SwitchToKubernetesUser(clusterUser *ClusterUser) {
-	switchToUser(clusterUser.KubectlUserName)
+func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
+	return switchToUser(clusterUser.KubectlUserName)
 }
 
 func switchToUser(kubectlUserName string) error {
@@ -167,13 +173,13 @@ func switchToUser(kubectlUserName string) error {
 	return err
 }
 
-func renderTemplate(templatePath, outputPath string, templateData any) error {
-	templatePath, err := retrieveFixtureFilePath(templatePath)
+func renderTemplate(templatePath, outputPath string, templateData any) (err error) {
+	fixturePath, err := retrieveFixtureFilePath(templatePath)
 	if err != nil {
 		return err
 	}
 
-	parsedTemplate, err := template.ParseFiles(templatePath)
+	parsedTemplate, err := template.ParseFiles(fixturePath)
 	if err != nil {
 		return err
 	}
@@ -182,9 +188,11 @@ func renderTemplate(templatePath, outputPath string, templateData any) error {
 	if err != nil {
 		return err
 	}
-	defer fileWriter.Close()
+	defer func() {
+		err = fileWriter.Close()
+	}()
 
-	parsedTemplate.Execute(fileWriter, templateData)
+	err = parsedTemplate.Execute(fileWriter, templateData)
 	if err != nil {
 		return err
 	}
