@@ -11,6 +11,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"charm.land/log/v2"
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
+	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	"github.com/spf13/cobra"
@@ -35,12 +36,6 @@ Command returns a `,
 			os.Exit(1)
 		}
 
-		kubeconfig, err := cmd.Flags().GetString("kubeconfig")
-		if err != nil {
-			log.Error("Error getting kubeconfig flag value", "error", err)
-			os.Exit(1)
-		}
-
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
 			log.Error("Error getting namespace flag value", "error", err)
@@ -59,7 +54,13 @@ Command returns a `,
 			os.Exit(1)
 		}
 
-		client, err := jobrequest.CreateJobRequestClient(kubeconfig, namespace)
+		kubeconfigFlag := cmd.Flags().Lookup("kubeconfig")
+		kubeConfig, err := kubernetes.CreateKubeConfig(kubeconfigFlag)
+		if err != nil {
+			log.Error("error creating kubeconfig", "error", err)
+			os.Exit(1)
+		}
+		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)

@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	restclient "k8s.io/client-go/rest"
 )
 
 const JobRequestResourceName = "jobrequests"
@@ -81,20 +81,14 @@ func (c *JobRequestClient) CreateJobRequestReview(jobRequestReview jrv1.JobReque
 	return err
 }
 
-func CreateJobRequestClient(kubeconfigPath string, namespace string) (*JobRequestClient, error) {
-	log.Debug("creating job request client", "kubeconfig", kubeconfigPath)
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+func CreateJobRequestClient(kubeRestClientConfig *restclient.Config, namespace string) (*JobRequestClient, error) {
+	log.Debug("creating job request client")
+	dynamic, err := dynamic.NewForConfig(kubeRestClientConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	dynamic, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
+	clientset, err := kubernetes.NewForConfig(kubeRestClientConfig)
 	if err != nil {
 		return nil, err
 	}
