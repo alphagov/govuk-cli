@@ -12,6 +12,16 @@ import (
 var _ = Describe("jobrequest review", func() {
 	const namespace = "default"
 
+	BeforeEach(func() {
+		err := SwitchToKubernetesUser(JobReviewerUser)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		err := SwitchToKubernetesAdminUser()
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	Context("when the job request can't be found", func() {
 		It("errors", func(ctx SpecContext) {
 			cmd, err := cliCmd(ctx, "jobrequest", "review", "thisjobdoesntexist", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
@@ -82,6 +92,30 @@ var _ = Describe("jobrequest review", func() {
 			Expect(err).To(MatchError("exit status 1"))
 
 			Expect(string(output)).To(ContainSubstring("Job request has already been reviewed"))
+		})
+	})
+
+	Context("when the job request was also created by the reviewer", func() {
+		const jobRequestName = "reviewer-and-requester-the-same"
+
+		It("errors", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace)
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
+			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).To(MatchError("exit status 1"))
+
+			Expect(string(output)).To(ContainSubstring("You cannot review your own JobRequest"))
 		})
 	})
 

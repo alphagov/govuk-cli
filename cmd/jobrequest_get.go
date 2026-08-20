@@ -11,6 +11,7 @@ import (
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
+	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -81,12 +82,12 @@ tail logs for the resulting job, use the --follow flag.`,
 				if err != nil {
 					reviewedBy = "[Review has no reviewed-by annotation]"
 				} else {
-					reviewedArn, err := jobrequest.ParseAssumedRoleArn(reviewedByAnnotation)
+					userIdentity, err := jrv1.ParseUserIdentityFromARN(reviewedByAnnotation)
 					if err != nil {
 						log.Warn("Error parsing reviewed-by ARN", "arn", reviewedByAnnotation, "error", err)
 						reviewedBy = "[Error parsing reviewer's role ARN]"
 					} else {
-						reviewedBy = fmt.Sprintf("%s (%s)", reviewedArn.UserName, reviewedArn.RoleName)
+						reviewedBy = fmt.Sprintf("%s (%s)", userIdentity.UserName, userIdentity.RoleName)
 					}
 				}
 				t.Row()

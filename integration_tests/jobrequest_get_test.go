@@ -1,6 +1,8 @@
 package integration_tests
 
 import (
+	"fmt"
+
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,7 +17,7 @@ func pendingJobRequest(name string, namespace string) *jrv1.JobRequest {
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestRequestedByAnnotation: JobRequesterUser.ARN,
 			},
 		},
 		Spec: jrv1.JobRequestSpec{
@@ -44,7 +46,7 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jrv1.JobRequestReviewReviewedByAnnotation: "arn:aws:sts::1234:assumed-role/reviewer.user-platformengineer/test-platformengineer",
+				jrv1.JobRequestReviewReviewedByAnnotation: JobReviewerUser.ARN,
 			},
 		},
 		Spec: jrv1.JobRequestReviewSpec{
@@ -60,30 +62,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "default"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := &jrv1.JobRequest{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      jobRequestName,
-					Namespace: namespace,
-					Annotations: map[string]string{
-						jrv1.JobRequestRequestedByAnnotation: "arn:aws:sts::1234:assumed-role/some.user-platformengineer/test-platformengineer",
-					},
-				},
-				Spec: jrv1.JobRequestSpec{
-					ContainerFrom: jrv1.JobRequestContainerFrom{
-						PodSpecFrom: jrv1.JobRequestPodSpecFrom{
-							Group: "apps/v1",
-							Kind:  "Deployment",
-							Name:  "publishing-api",
-						},
-						ContainerName: "app",
-					},
-					Command: "echo",
-					Args:    []string{"hello"},
-				},
-				Status: jrv1.JobRequestStatus{
-					State: jrv1.JobRequestPending,
-				},
-			}
+			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -101,7 +80,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring(jobRequestName))
 			Expect(string(output)).To(ContainSubstring("echo hello"))
 			Expect(string(output)).To(ContainSubstring(string(jrv1.JobRequestPending)))
-			Expect(string(output)).To(ContainSubstring("some.user (platformengineer)"))
+			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobRequesterUser.Name, JobRequesterUser.Role)))
 			Expect(string(output)).To(ContainSubstring("deployment/publishing-api"))
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
 			Expect(string(output)).ToNot(ContainSubstring("Get review:"))
@@ -329,7 +308,7 @@ var _ = Describe("jobrequest get", func() {
 			output, err := cmd.CombinedOutput()
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
-			Expect(string(output)).To(ContainSubstring("reviewer.user (platformengineer)"))
+			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobReviewerUser.Name, JobReviewerUser.Role)))
 			Expect(string(output)).To(MatchRegexp(`Review Decision\s*│\s*%s\s*│`, jrv1.JobRequestReviewApproved))
 		})
 	})

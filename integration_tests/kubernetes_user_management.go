@@ -16,6 +16,7 @@ type ClusterUsers []*ClusterUser
 type ClusterUser struct {
 	Name                string
 	ARN                 string
+	Role                string
 	KubectlUserName     string
 	Base64EncodedCSR    string
 	KeyFilePath         string
@@ -27,13 +28,15 @@ type ClusterUser struct {
 var (
 	// JobRequesterUser is the user to use for creating JobRequest resources
 	JobRequesterUser = &ClusterUser{
-		Name: "job-requester",
+		Name: "job.req",
 		ARN:  "arn:aws:sts::123456789012:assumed-role/job.req-developer/e2e",
+		Role: "developer",
 	}
 	// JobReviewerUser is the user to use for creating JobRequestReview resources
 	JobReviewerUser = &ClusterUser{
-		Name: "job-reviewer",
-		ARN:  "arn:aws:sts::123456789012:assumed-role/job.rev-developer/e2e",
+		Name: "job.rev",
+		ARN:  "arn:aws:sts::123456789012:assumed-role/job.rev-tempadmin/e2e",
+		Role: "tempadmin",
 	}
 	// KubernetesUsers will have kubernetes users provisioned into the cluster. Only Name and ARN need to be specified
 	KubernetesUsers = &ClusterUsers{
@@ -86,7 +89,7 @@ func SetupKubernetesUsers(ctx context.Context) error {
 
 		user.Base64EncodedCSR = base64.StdEncoding.EncodeToString(csr)
 
-		err = renderTemplate("user_setup/certificate_signing_request.template.yaml", user.CSRManifestPath, user)
+		err = renderTemplate(ctx, "user_setup/certificate_signing_request.template.yaml", user.CSRManifestPath, user)
 		if err != nil {
 			return err
 		}
@@ -133,7 +136,7 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	}
 
 	roleBindingManifestFilePath := filepath.Join(tempDir, "role_bindings.yaml")
-	err = renderTemplate("user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
+	err = renderTemplate(ctx, "user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
 	if err != nil {
 		return err
 	}
@@ -146,21 +149,8 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	return nil
 }
 
-func DeleteKubernetesUsersFromKubeconfig(ctx context.Context) error {
-	for _, user := range *KubernetesUsers {
-		cmd := exec.CommandContext(ctx, "kubectl", "config", "delete-user", user.KubectlUserName)
-		_, err := runCmd(cmd)
-		// This is only called in shutdown, and we don't want to fail the suite shutdown if this errors, so don't Expect success
-		if err != nil {
-			return fmt.Errorf("failed to delete user %s from kubectl config, error was %s", user.KubectlUserName, err.Error())
-		}
-	}
-
-	return nil
-}
-
 func SwitchToKubernetesAdminUser() error {
-	return switchToUser("kwok-admin")
+	return switchToUser(fmt.Sprintf("kwok-%s", clusterName))
 }
 
 func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
@@ -168,13 +158,12 @@ func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
 }
 
 func switchToUser(kubectlUserName string) error {
-	cmd := exec.CommandContext(context.Background(), "kubectl", "config", "set-context", "--current", "--user", kubectlUserName)
-	_, err := runCmd(cmd)
+	_, err := kubectl(context.Background(), "config", "set-context", "--current", "--user", kubectlUserName)
 	return err
 }
 
-func renderTemplate(templatePath, outputPath string, templateData any) (err error) {
-	fixturePath, err := retrieveFixtureFilePath(templatePath)
+func renderTemplate(ctx context.Context, templatePath, outputPath string, templateData any) (err error) {
+	fixturePath, err := retrieveFixtureFilePath(ctx, templatePath)
 	if err != nil {
 		return err
 	}
@@ -202,16 +191,6 @@ func renderTemplate(templatePath, outputPath string, templateData any) (err erro
 
 // Run executes the provided command within this context
 func runCmd(cmd *exec.Cmd) (string, error) {
-	// dir, _ := getProjectDir()
-	// cmd.Dir = dir
-
-	// err := os.Chdir(cmd.Dir)
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// cmd.Env = append(os.Environ(), "GO111MODULE=on")
-	// command := strings.Join(cmd.Args, " ")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(output), fmt.Errorf(
@@ -223,16 +202,16 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 }
 
 // getProjectDir will return the directory where the project is
-func getProjectDir() (string, error) {
-	out, err := exec.Command("go", "list", "-m", "-f", "{{.Dir}}").Output()
+func getProjectDir(ctx context.Context) (string, error) {
+	out, err := exec.CommandContext(ctx, "go", "list", "-m", "-f", "{{.Dir}}").Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get project directory: %w", err)
 	}
 	return strings.Trim(string(out), "\n"), nil
 }
 
-func retrieveFixtureFilePath(fixture string) (string, error) {
-	dir, err := getProjectDir()
+func retrieveFixtureFilePath(ctx context.Context, fixture string) (string, error) {
+	dir, err := getProjectDir(ctx)
 
 	if err != nil {
 		return dir, fmt.Errorf("failed to get current working directory: %w", err)

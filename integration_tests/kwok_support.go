@@ -34,9 +34,9 @@ var (
 )
 
 // kwokctl runs a kwokctl command against the test cluster.
-func kwokctl(args ...string) ([]byte, error) {
+func kwokctl(ctx context.Context, args ...string) ([]byte, error) {
 	kwokctlArgs := append([]string{"tool", "kwokctl", "--name", clusterName}, args...)
-	cmd := exec.Command("go", kwokctlArgs...)
+	cmd := exec.CommandContext(ctx, "go", kwokctlArgs...)
 	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
@@ -51,7 +51,7 @@ func kwokctl(args ...string) ([]byte, error) {
 func kubectl(ctx context.Context, args ...string) (string, error) {
 	kubectlArgs := append([]string{"kubectl", "--kubeconfig", kubeconfigPath}, args...)
 
-	output, err := kwokctl(kubectlArgs...)
+	output, err := kwokctl(ctx, kubectlArgs...)
 	if err != nil {
 		return "", err
 	}
@@ -61,8 +61,8 @@ func kubectl(ctx context.Context, args ...string) (string, error) {
 
 // operatorCRDPath resolves the path to the CRD manifests shipped inside the
 // govuk-job-request-operator module.
-func operatorCRDPath() (string, error) {
-	out, err := exec.Command("go", "list", "-m", "-f", "{{.Dir}}", "github.com/alphagov/govuk-job-request-operator").Output()
+func operatorCRDPath(ctx context.Context) (string, error) {
+	out, err := exec.CommandContext(ctx, "go", "list", "-m", "-f", "{{.Dir}}", "github.com/alphagov/govuk-job-request-operator").Output()
 	if err != nil {
 		return "", fmt.Errorf("resolving operator module dir: %w", err)
 	}
@@ -76,10 +76,10 @@ type KwokPkiFiles struct {
 
 // startTestCluster creates a kwokctl-managed cluster with the JobRequest CRDs
 // installed and writes out a kubeconfig for it.
-func startTestCluster() error {
+func startTestCluster(ctx context.Context) error {
 	// Remove any cluster left behind by an earlier interrupted run; deleting
 	// a cluster that doesn't exist is a no-op.
-	if _, err := kwokctl("delete", "cluster"); err != nil {
+	if _, err := kwokctl(ctx, "delete", "cluster"); err != nil {
 		return err
 	}
 
@@ -88,10 +88,21 @@ func startTestCluster() error {
 		return err
 	}
 
+	kubeconfigFile, err := os.CreateTemp("", "govuk-cli-kwok-kubeconfig-*")
+	if err != nil {
+		return err
+	}
+	err = kubeconfigFile.Close()
+	if err != nil {
+		return err
+	}
+	kubeconfigPath = kubeconfigFile.Name()
+
 	// The Logs CRD lets tests serve a local file as a pod's container logs
 	// through kwok's fake kubelet, so log streaming can be tested end-to-end.
-	_, err = kwokctl(
+	_, err = kwokctl(ctx,
 		"create", "cluster",
+		"--kubeconfig", kubeconfigPath,
 		"--runtime", "binary",
 		"--enable-crds", "Logs",
 		"--extra-args", fmt.Sprintf("kube-controller-manager=cluster-signing-cert-file=%s", pkiFiles.CertFile),
@@ -102,28 +113,17 @@ func startTestCluster() error {
 		return err
 	}
 
-	kubeconfig, err := kwokctl("get", "kubeconfig")
+	kubeconfig, err := kwokctl(ctx, "get", "kubeconfig")
 	if err != nil {
 		return err
 	}
-
-	kubeconfigFile, err := os.CreateTemp("", "govuk-cli-kwok-kubeconfig-*")
-	if err != nil {
-		return err
-	}
-	defer kubeconfigFile.Close() //nolint:errcheck
-
-	if _, err := kubeconfigFile.Write(kubeconfig); err != nil {
-		return err
-	}
-	kubeconfigPath = kubeconfigFile.Name()
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig)
 	if err != nil {
 		return err
 	}
 
-	if err := installCRDs(config); err != nil {
+	if err := installCRDs(ctx, config); err != nil {
 		return err
 	}
 
@@ -131,22 +131,22 @@ func startTestCluster() error {
 	return err
 }
 
-func stopTestCluster() error {
+func stopTestCluster(ctx context.Context) error {
 	if kubeconfigPath != "" {
 		err := os.Remove(kubeconfigPath)
 		if err != nil {
 			return err
 		}
 	}
-	_, err := kwokctl("delete", "cluster")
+	_, err := kwokctl(ctx, "delete", "cluster")
 	return err
 }
 
 // installCRDs installs the operator's CRD manifests into the test cluster and
 // waits for them to become established, so tests can create custom resources
 // as soon as the suite setup returns.
-func installCRDs(config *rest.Config) error {
-	crdDir, err := operatorCRDPath()
+func installCRDs(ctx context.Context, config *rest.Config) error {
+	crdDir, err := operatorCRDPath(ctx)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,6 @@ func installCRDs(config *rest.Config) error {
 		return err
 	}
 
-	ctx := context.Background()
 	crdNames := make([]string, 0, len(manifests))
 	for _, manifest := range manifests {
 		data, err := os.ReadFile(manifest)

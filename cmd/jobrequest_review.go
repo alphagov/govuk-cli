@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -11,9 +12,11 @@ import (
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
+	"github.com/alphagov/govuk-cli/internal/whoami"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	restclient "k8s.io/client-go/rest"
 )
 
 var reviewCommand = &cobra.Command{
@@ -72,6 +75,17 @@ use the --follow flag.`,
 
 		if jr.Status.ReviewName != "" {
 			log.Error("Job request has already been reviewed", "reviewName", jr.Status.ReviewName)
+			os.Exit(1)
+		}
+
+		reviewerDifferentThanRequester, err := isReviewerDifferentFromRequester(kubeConfig, jr)
+		if err != nil {
+			log.Error("Error looking up reviewer and requester details", "error", err)
+			os.Exit(1)
+		}
+
+		if !reviewerDifferentThanRequester {
+			log.Error("You cannot review your own JobRequest")
 			os.Exit(1)
 		}
 
@@ -206,4 +220,44 @@ func parseSubmitInput(reader *bufio.Reader) {
 			log.Error("Only 'yes' and 'no' are valid submission decision options", "providedDecision", submitDecision)
 		}
 	}
+}
+
+// Check if the reviewer and the requester are different users
+func isReviewerDifferentFromRequester(kubeRestClientConfig *restclient.Config, jr *jrv1.JobRequest) (bool, error) {
+	requestedByAnnotation, err := jr.GetRequestedBy()
+	if err != nil {
+		log.Errorf("Could not get the requested-by annotation from the JobRequest, error: %s", err.Error())
+		return false, err
+	}
+
+	jobRequestRequesterUserIdentity, err := jrv1.ParseUserIdentityFromARN(requestedByAnnotation)
+	if err != nil {
+		log.Errorf(
+			"Couldn't parse the JobRequests requested-by annotation (%s) as a valid user, with error %s",
+			string(requestedByAnnotation), err.Error(),
+		)
+		return false, err
+	}
+
+	whoamiClient, err := whoami.CreateWhoAmIClient(kubeRestClientConfig)
+	if err != nil {
+		log.Errorf("Couldn't create kubernetes WhoAmI client, error: %s", err.Error())
+		return false, err
+	}
+
+	reviewerUserIdentity, err := whoamiClient.WhoAmI()
+	if err != nil {
+		log.Errorf("Couldn't execute WhoAmI query against Kuberentes, error: %s", err.Error())
+		return false, err
+	}
+
+	if jobRequestRequesterUserIdentity == nil {
+		return false, errors.New("could not interrogate who the the JobRequest requester user was, the jobRequestRequesterUserIdentity was nil")
+	}
+
+	if reviewerUserIdentity == nil {
+		return false, errors.New("could not interrogate who the the current user is from Kubernetes point of view, the reviewerUserIdentity was nil")
+	}
+
+	return jobRequestRequesterUserIdentity.UserName != reviewerUserIdentity.UserName, nil
 }

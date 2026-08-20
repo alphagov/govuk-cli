@@ -17,10 +17,10 @@ func (c *JobRequestClient) JobRequestDetailsKVTable(jr *jrv1.JobRequest) (*table
 		requestedBy = "-"
 	}
 
-	arn, err := ParseAssumedRoleArn(requestedBy)
+	userIdentity, err := jrv1.ParseUserIdentityFromARN(requestedBy)
 	if err == nil {
-		log.Debug("Parsed requester arn", "arn", arn)
-		requestedBy = fmt.Sprintf("%s (%s)", arn.UserName, arn.RoleName)
+		log.Debug("Parsed requester arn", "arn", userIdentity)
+		requestedBy = fmt.Sprintf("%s (%s)", userIdentity.UserName, userIdentity.RoleName)
 	} else {
 		log.Error("Error parsing requester ARN", "arn", requestedBy, "error", err)
 	}
