@@ -12,6 +12,16 @@ import (
 var _ = Describe("jobrequest review", func() {
 	const namespace = "default"
 
+	BeforeEach(func() {
+		err := SwitchToKubernetesUser(JobReviewerUser)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		err := SwitchToKubernetesAdminUser()
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	Context("when the job request can't be found", func() {
 		It("errors", func(ctx SpecContext) {
 			cmd, err := cliCmd(ctx, "jobrequest", "review", "thisjobdoesntexist", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
