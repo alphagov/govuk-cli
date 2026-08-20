@@ -48,6 +48,17 @@ func kwokctl(args ...string) ([]byte, error) {
 	return out, nil
 }
 
+func kubectl(ctx context.Context, args ...string) (string, error) {
+	kubectlArgs := append([]string{"kubectl", "--kubeconfig", kubeconfigPath}, args...)
+
+	output, err := kwokctl(kubectlArgs...)
+	if err != nil {
+		return "", err
+	}
+
+	return string(output), nil
+}
+
 // operatorCRDPath resolves the path to the CRD manifests shipped inside the
 // govuk-job-request-operator module.
 func operatorCRDPath() (string, error) {
@@ -56,6 +67,11 @@ func operatorCRDPath() (string, error) {
 		return "", fmt.Errorf("resolving operator module dir: %w", err)
 	}
 	return filepath.Join(strings.TrimSpace(string(out)), "config", "crd", "bases"), nil
+}
+
+type KwokPkiFiles struct {
+	KeyFile  string
+	CertFile string
 }
 
 // startTestCluster creates a kwokctl-managed cluster with the JobRequest CRDs
@@ -67,9 +83,22 @@ func startTestCluster() error {
 		return err
 	}
 
+	pkiFiles, err := getKwokPkiFiles()
+	if err != nil {
+		return err
+	}
+
 	// The Logs CRD lets tests serve a local file as a pod's container logs
 	// through kwok's fake kubelet, so log streaming can be tested end-to-end.
-	if _, err := kwokctl("create", "cluster", "--runtime", "binary", "--enable-crds", "Logs", "--wait", "120s"); err != nil {
+	_, err = kwokctl(
+		"create", "cluster",
+		"--runtime", "binary",
+		"--enable-crds", "Logs",
+		"--extra-args", fmt.Sprintf("kube-controller-manager=cluster-signing-cert-file=%s", pkiFiles.CertFile),
+		"--extra-args", fmt.Sprintf("kube-controller-manager=cluster-signing-key-file=%s", pkiFiles.KeyFile),
+		"--wait", "120s",
+	)
+	if err != nil {
 		return err
 	}
 
@@ -398,4 +427,24 @@ func deleteJobRequestReview(ctx context.Context, jrr *jrv1.JobRequestReview) err
 		Resource(jrv1.SchemeGroupVersion.WithResource("jobrequestreviews")).
 		Namespace(jrr.Namespace).
 		Delete(ctx, jrr.Name, metav1.DeleteOptions{})
+}
+
+func getKwokPkiFiles() (*KwokPkiFiles, error) {
+	workdirPath, ok := os.LookupEnv("KWOK_WORKDIR")
+	if !ok {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+		workdirPath = filepath.Join(homeDir, ".kwok")
+	}
+
+	kwokClusterPkiPath := filepath.Join(workdirPath, "clusters", clusterName, "pki")
+
+	kwokPkiFiles := &KwokPkiFiles{
+		CertFile: filepath.Join(kwokClusterPkiPath, "ca.crt"),
+		KeyFile:  filepath.Join(kwokClusterPkiPath, "ca.key"),
+	}
+
+	return kwokPkiFiles, nil
 }
