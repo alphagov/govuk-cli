@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"charm.land/log/v2"
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
+	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,6 @@ govuk-cli jobrequest get jr-12345678 -f`,
 If you want to wait for the job request to be reviewed and
 tail logs for the resulting job, use the --follow flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		kubeconfig := cmd.Flag("kubeconfig").Value.String()
 		namespace := cmd.Flag("namespace").Value.String()
 		follow, err := cmd.Flags().GetBool("follow")
 
@@ -32,7 +32,14 @@ tail logs for the resulting job, use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		client, err := jobrequest.CreateJobRequestClient(kubeconfig, namespace)
+		kubeconfigFlag := cmd.Flags().Lookup("kubeconfig")
+		kubeConfig, err := kubernetes.CreateKubeConfig(kubeconfigFlag)
+		if err != nil {
+			log.Error("error creating kubeconfig", "error", err)
+			os.Exit(1)
+		}
+
+		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)
