@@ -16,6 +16,7 @@ type ClusterUsers []*ClusterUser
 type ClusterUser struct {
 	Name                string
 	ARN                 string
+	Role                string
 	KubectlUserName     string
 	Base64EncodedCSR    string
 	KeyFilePath         string
@@ -27,13 +28,15 @@ type ClusterUser struct {
 var (
 	// JobRequesterUser is the user to use for creating JobRequest resources
 	JobRequesterUser = &ClusterUser{
-		Name: "job-requester",
+		Name: "job.req",
 		ARN:  "arn:aws:sts::123456789012:assumed-role/job.req-developer/e2e",
+		Role: "developer",
 	}
 	// JobReviewerUser is the user to use for creating JobRequestReview resources
 	JobReviewerUser = &ClusterUser{
-		Name: "job-reviewer",
-		ARN:  "arn:aws:sts::123456789012:assumed-role/job.rev-developer/e2e",
+		Name: "job.rev",
+		ARN:  "arn:aws:sts::123456789012:assumed-role/job.rev-tempadmin/e2e",
+		Role: "tempadmin",
 	}
 	// KubernetesUsers will have kubernetes users provisioned into the cluster. Only Name and ARN need to be specified
 	KubernetesUsers = &ClusterUsers{
@@ -146,19 +149,6 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	return nil
 }
 
-func DeleteKubernetesUsersFromKubeconfig(ctx context.Context) error {
-	for _, user := range *KubernetesUsers {
-		cmd := exec.CommandContext(ctx, "kubectl", "config", "delete-user", user.KubectlUserName)
-		_, err := runCmd(cmd)
-		// This is only called in shutdown, and we don't want to fail the suite shutdown if this errors, so don't Expect success
-		if err != nil {
-			return fmt.Errorf("failed to delete user %s from kubectl config, error was %s", user.KubectlUserName, err.Error())
-		}
-	}
-
-	return nil
-}
-
 func SwitchToKubernetesAdminUser() error {
 	return switchToUser("kwok-admin")
 }
@@ -168,8 +158,7 @@ func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
 }
 
 func switchToUser(kubectlUserName string) error {
-	cmd := exec.CommandContext(context.Background(), "kubectl", "config", "set-context", "--current", "--user", kubectlUserName)
-	_, err := runCmd(cmd)
+	_, err := kubectl(context.Background(), "config", "set-context", "--current", "--user", kubectlUserName)
 	return err
 }
 

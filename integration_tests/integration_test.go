@@ -2,7 +2,6 @@ package integration_tests
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,10 +21,4 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	Expect(stopTestCluster(context.Background())).To(Succeed())
-	err := DeleteKubernetesUsersFromKubeconfig(context.Background())
-	// Even if user deletion fails, we should still continue and delete the cluster, so just print it
-	if err != nil {
-		fmt.Println(err)
-	}
-
 })
