@@ -88,10 +88,21 @@ func startTestCluster(ctx context.Context) error {
 		return err
 	}
 
+	kubeconfigFile, err := os.CreateTemp("", "govuk-cli-kwok-kubeconfig-*")
+	if err != nil {
+		return err
+	}
+	err = kubeconfigFile.Close()
+	if err != nil {
+		return err
+	}
+	kubeconfigPath = kubeconfigFile.Name()
+
 	// The Logs CRD lets tests serve a local file as a pod's container logs
 	// through kwok's fake kubelet, so log streaming can be tested end-to-end.
 	_, err = kwokctl(ctx,
 		"create", "cluster",
+		"--kubeconfig", kubeconfigPath,
 		"--runtime", "binary",
 		"--enable-crds", "Logs",
 		"--extra-args", fmt.Sprintf("kube-controller-manager=cluster-signing-cert-file=%s", pkiFiles.CertFile),
@@ -106,17 +117,6 @@ func startTestCluster(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	kubeconfigFile, err := os.CreateTemp("", "govuk-cli-kwok-kubeconfig-*")
-	if err != nil {
-		return err
-	}
-	defer kubeconfigFile.Close() //nolint:errcheck
-
-	if _, err := kubeconfigFile.Write(kubeconfig); err != nil {
-		return err
-	}
-	kubeconfigPath = kubeconfigFile.Name()
 
 	config, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig)
 	if err != nil {
