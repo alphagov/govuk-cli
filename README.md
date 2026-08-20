@@ -103,7 +103,6 @@ Example commands:
 ### Prerequisites
 
 * Go 1.26
-* [KWOK](https://kwok.sigs.k8s.io/docs/user/installation/)
 * [GoReleaser CLI](https://goreleaser.com/getting-started/install/)
 
 ### Build and test

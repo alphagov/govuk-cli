@@ -80,7 +80,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring(jobRequestName))
 			Expect(string(output)).To(ContainSubstring("echo hello"))
 			Expect(string(output)).To(ContainSubstring(string(jrv1.JobRequestPending)))
-			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobReviewerUser.Name, JobReviewerUser.Role)))
+			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobRequesterUser.Name, JobRequesterUser.Role)))
 			Expect(string(output)).To(ContainSubstring("deployment/publishing-api"))
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
 			Expect(string(output)).ToNot(ContainSubstring("Get review:"))
@@ -308,7 +308,7 @@ var _ = Describe("jobrequest get", func() {
 			output, err := cmd.CombinedOutput()
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
-			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobRequesterUser.Name, JobRequesterUser.Role)))
+			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobReviewerUser.Name, JobReviewerUser.Role)))
 			Expect(string(output)).To(MatchRegexp(`Review Decision\s*│\s*%s\s*│`, jrv1.JobRequestReviewApproved))
 		})
 	})
