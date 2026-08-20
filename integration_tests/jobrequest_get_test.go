@@ -84,6 +84,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring("deployment/publishing-api"))
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
 			Expect(string(output)).ToNot(ContainSubstring("Get review:"))
+			Expect(string(output)).ToNot(ContainSubstring("Job Name"))
 		})
 
 		It("errors when a job request can't be found", func(ctx SpecContext) {
@@ -211,6 +212,16 @@ var _ = Describe("jobrequest get", func() {
 
 			Expect(string(output)).To(ContainSubstring("Print logs:"))
 			Expect(string(output)).To(ContainSubstring("$ kubectl -n default logs -f job/" + jobName))
+		})
+
+		It("includes the job name in the output", func(ctx SpecContext) {
+			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).NotTo(HaveOccurred(), string(output))
+
+			Expect(string(output)).To(MatchRegexp(`Job Name[^\r\n]+%s`, jobName))
 		})
 	})
 

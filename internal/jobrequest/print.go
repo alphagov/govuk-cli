@@ -44,5 +44,9 @@ func (c *JobRequestClient) JobRequestDetailsKVTable(jr *jrv1.JobRequest) (*table
 	t.Row("Status", string(state))
 	t.Row("Requested By", requestedBy)
 
+	if jr.Status.JobName != "" {
+		t.Row("Job Name", jr.Status.JobName)
+	}
+
 	return t, nil
 }
