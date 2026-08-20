@@ -150,7 +150,7 @@ func SetupKubernetesUsers(ctx context.Context) error {
 }
 
 func SwitchToKubernetesAdminUser() error {
-	return switchToUser("kwok-admin")
+	return switchToUser(fmt.Sprintf("kwok-%s", clusterName))
 }
 
 func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
