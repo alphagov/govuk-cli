@@ -95,6 +95,30 @@ var _ = Describe("jobrequest review", func() {
 		})
 	})
 
+	Context("when the job request was also created by the reviewer", func() {
+		const jobRequestName = "reviewer-and-requester-the-same"
+
+		It("errors", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace)
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
+			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).To(MatchError("exit status 1"))
+
+			Expect(string(output)).To(ContainSubstring("You cannot review your own JobRequest"))
+		})
+	})
+
 	// The review command reads the decision, an optional comment and a submit
 	// confirmation from stdin, one line each. A trailing "y" confirms the
 	// submission so the JobRequestReview is actually created.
