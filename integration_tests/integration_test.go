@@ -15,16 +15,17 @@ func TestEverything(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	Expect(startTestCluster()).To(Succeed())
-	Expect(SetupKubernetesUsers(context.Background())).To(Succeed())
+	ctx := context.Background()
+	Expect(startTestCluster(ctx)).To(Succeed())
+	Expect(SetupKubernetesUsers(ctx)).To(Succeed())
 })
 
 var _ = AfterSuite(func() {
+	Expect(stopTestCluster(context.Background())).To(Succeed())
 	err := DeleteKubernetesUsersFromKubeconfig(context.Background())
 	// Even if user deletion fails, we should still continue and delete the cluster, so just print it
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	Expect(stopTestCluster()).To(Succeed())
 })

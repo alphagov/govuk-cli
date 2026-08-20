@@ -86,7 +86,7 @@ func SetupKubernetesUsers(ctx context.Context) error {
 
 		user.Base64EncodedCSR = base64.StdEncoding.EncodeToString(csr)
 
-		err = renderTemplate("user_setup/certificate_signing_request.template.yaml", user.CSRManifestPath, user)
+		err = renderTemplate(ctx, "user_setup/certificate_signing_request.template.yaml", user.CSRManifestPath, user)
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	}
 
 	roleBindingManifestFilePath := filepath.Join(tempDir, "role_bindings.yaml")
-	err = renderTemplate("user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
+	err = renderTemplate(ctx, "user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
 	if err != nil {
 		return err
 	}
@@ -173,8 +173,8 @@ func switchToUser(kubectlUserName string) error {
 	return err
 }
 
-func renderTemplate(templatePath, outputPath string, templateData any) (err error) {
-	fixturePath, err := retrieveFixtureFilePath(templatePath)
+func renderTemplate(ctx context.Context, templatePath, outputPath string, templateData any) (err error) {
+	fixturePath, err := retrieveFixtureFilePath(ctx, templatePath)
 	if err != nil {
 		return err
 	}
@@ -202,16 +202,6 @@ func renderTemplate(templatePath, outputPath string, templateData any) (err erro
 
 // Run executes the provided command within this context
 func runCmd(cmd *exec.Cmd) (string, error) {
-	// dir, _ := getProjectDir()
-	// cmd.Dir = dir
-
-	// err := os.Chdir(cmd.Dir)
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	// cmd.Env = append(os.Environ(), "GO111MODULE=on")
-	// command := strings.Join(cmd.Args, " ")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(output), fmt.Errorf(
@@ -223,16 +213,16 @@ func runCmd(cmd *exec.Cmd) (string, error) {
 }
 
 // getProjectDir will return the directory where the project is
-func getProjectDir() (string, error) {
-	out, err := exec.Command("go", "list", "-m", "-f", "{{.Dir}}").Output()
+func getProjectDir(ctx context.Context) (string, error) {
+	out, err := exec.CommandContext(ctx, "go", "list", "-m", "-f", "{{.Dir}}").Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get project directory: %w", err)
 	}
 	return strings.Trim(string(out), "\n"), nil
 }
 
-func retrieveFixtureFilePath(fixture string) (string, error) {
-	dir, err := getProjectDir()
+func retrieveFixtureFilePath(ctx context.Context, fixture string) (string, error) {
+	dir, err := getProjectDir(ctx)
 
 	if err != nil {
 		return dir, fmt.Errorf("failed to get current working directory: %w", err)
