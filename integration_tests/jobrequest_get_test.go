@@ -11,13 +11,13 @@ import (
 
 // pendingJobRequest returns a minimal valid JobRequest fixture in Pending
 // state that individual specs can adjust before creating.
-func pendingJobRequest(name string, namespace string) *jrv1.JobRequest {
+func pendingJobRequest(name, namespace, annotationArn string) *jrv1.JobRequest {
 	return &jrv1.JobRequest{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				jrv1.JobRequestRequestedByAnnotation: JobRequesterUser.ARN,
+				jrv1.JobRequestRequestedByAnnotation: annotationArn,
 			},
 		},
 		Spec: jrv1.JobRequestSpec{
@@ -53,6 +53,9 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 			JobRequestName: jobRequestName,
 			Decision:       string(jrv1.JobRequestReviewApproved),
 		},
+		Status: jrv1.JobRequestReviewStatus{
+			State: jrv1.JobRequestReviewState("Approved"),
+		},
 	}
 }
 
@@ -62,12 +65,20 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints the job request details", func(ctx SpecContext) {
@@ -85,6 +96,8 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
 			Expect(string(output)).ToNot(ContainSubstring("Get review:"))
 			Expect(string(output)).ToNot(ContainSubstring("Job Name"))
+			Expect(string(output)).ToNot(ContainSubstring("View logs in OpenSearch:"))
+			Expect(string(output)).ToNot(ContainSubstring("https://kibana.logit.io"))
 		})
 
 		It("errors when a job request can't be found", func(ctx SpecContext) {
@@ -103,13 +116,21 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Annotations[jrv1.JobRequestRequestedByAnnotation] = "not-a-valid-arn"
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints the raw annotation value and logs a parse error", func(ctx SpecContext) {
@@ -125,6 +146,16 @@ var _ = Describe("jobrequest get", func() {
 	})
 
 	Context("when an invalid number of arguments are passed", func() {
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("errors and prints usage", func(ctx SpecContext) {
 			cmd, err := cliCmd(ctx, "jobrequest", "get", "one-job", "another-job", "--kubeconfig", kubeconfigPath, "--namespace", "apps")
 			Expect(err).NotTo(HaveOccurred())
@@ -142,13 +173,21 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Annotations = nil
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints a placeholder for the requester", func(ctx SpecContext) {
@@ -167,13 +206,21 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = ""
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints the status as Unknown", func(ctx SpecContext) {
@@ -192,8 +239,16 @@ var _ = Describe("jobrequest get", func() {
 		const jobName = "has-job-name-x7k2p"
 		const namespace = "apps"
 
-		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("prints the kubectl logs command", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -201,9 +256,7 @@ var _ = Describe("jobrequest get", func() {
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
-		})
 
-		It("prints the kubectl logs command", func(ctx SpecContext) {
 			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -214,7 +267,50 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring("$ kubectl -n apps logs -f job/" + jobName))
 		})
 
+		It("prints the job logs url", func(ctx SpecContext) {
+			const reviewName = "review-valid-arn-review"
+			err := SwitchToKubernetesUser(IntegrationEnvUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, IntegrationEnvUser.ARN)
+			jr.Status.State = jrv1.JobRequestStarted
+			jr.Status.JobName = jobName
+			jr.Status.ReviewName = reviewName
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			jrr := approvedJobRequestReview(reviewName, namespace, jobRequestName)
+			Expect(createJobRequestReview(ctx, jrr)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+				Expect(deleteJobRequestReview(ctx, jrr)).To(Succeed())
+			})
+
+			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).NotTo(HaveOccurred(), string(output))
+
+			Expect(string(output)).To(ContainSubstring("Print logs:"))
+			Expect(string(output)).To(ContainSubstring("$ kubectl -n apps logs -f job/" + jobName))
+			Expect(string(output)).To(ContainSubstring("View logs in OpenSearch:"))
+			Expect(string(output)).To(ContainSubstring("https://kibana.logit.io"))
+		})
+
 		It("includes the job name in the output", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
+			jr.Status.State = jrv1.JobRequestStarted
+			jr.Status.JobName = jobName
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
 			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -231,13 +327,21 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints an error placeholder for the reviewer", func(ctx SpecContext) {
@@ -268,7 +372,10 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -280,6 +387,11 @@ var _ = Describe("jobrequest get", func() {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 				Expect(deleteJobRequestReview(ctx, jrr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints a placeholder for the reviewer", func(ctx SpecContext) {
@@ -299,7 +411,10 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -310,6 +425,11 @@ var _ = Describe("jobrequest get", func() {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 				Expect(deleteJobRequestReview(ctx, jrr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints the reviewer and the review decision", func(ctx SpecContext) {
@@ -330,7 +450,10 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -342,6 +465,11 @@ var _ = Describe("jobrequest get", func() {
 				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
 				Expect(deleteJobRequestReview(ctx, jrr)).To(Succeed())
 			})
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints an ARN parse error placeholder for the reviewer", func(ctx SpecContext) {

@@ -97,8 +97,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobRequestName = "follow-then-deleted"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a job request deleted error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--follow", "--log-level", "debug", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
@@ -126,8 +136,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobRequestName = "follow-rejected"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a rejected error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestRejected
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -149,8 +169,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobRequestName = "follow-malformed"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a malformed error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestMalformed
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -173,8 +203,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobName = "follow-actionable-x7k2p"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("detects the actionable state and starts watching the Job", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestApproved
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -202,8 +242,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobName = "follow-job-deleted-x7k2p"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a job deleted error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -243,8 +293,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobName = "follow-job-starts-x7k2p"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("finishes the Job watch loop", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -286,8 +346,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobName = "follow-no-pods-x7k2p"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a no pods found error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -327,8 +397,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const podName = "follow-pod-deleted-x7k2p-9fh3s"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("exits with a pod deleted error", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -377,8 +457,18 @@ var _ = Describe("jobrequest get --follow", func() {
 		const podName = "follow-pod-starts-x7k2p-9fh3s"
 		const namespace = "apps"
 
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("finishes the Pod watch loop and starts tailing logs", func(ctx SpecContext) {
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -431,6 +521,11 @@ var _ = Describe("jobrequest get --follow", func() {
 		const nodeName = "kwok-node-follow-logs"
 		const namespace = "apps"
 
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("streams the pod's logs", func(ctx SpecContext) {
 			logsFile := filepath.Join(GinkgoT().TempDir(), "pod.log")
 			logLines := "2026-07-14T15:00:00.000000001Z stdout F migration started\n" +
@@ -439,6 +534,9 @@ var _ = Describe("jobrequest get --follow", func() {
 
 			node := kwokNode(nodeName)
 			Expect(createNode(ctx, node)).To(Succeed())
+
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
 
 			DeferCleanup(func(ctx SpecContext) {
 				Expect(deleteNode(ctx, node)).To(Succeed())
@@ -450,7 +548,7 @@ var _ = Describe("jobrequest get --follow", func() {
 				Expect(deletePodLogs(ctx, podName, namespace)).To(Succeed())
 			})
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestStarted
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
