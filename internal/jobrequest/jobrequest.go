@@ -29,7 +29,7 @@ func (c *JobRequestClient) InterfaceFor(resourceName string) dynamic.ResourceInt
 
 func (c *JobRequestClient) JobRequest(jobRequestName string) (*jrv1.JobRequest, error) {
 	i := c.InterfaceFor(JobRequestResourceName)
-	unstructured, err := i.Get(c.ctx, jobRequestName, metav1.GetOptions{}, "status")
+	unstructured, err := i.Get(c.ctx, jobRequestName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
