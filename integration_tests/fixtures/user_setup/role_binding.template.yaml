@@ -1,3 +1,38 @@
+# These ClusterRoles and Roles are the same permissions we give Developer in the cluster as of 27/08/2026
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jobrequests-developer-cluster
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces", "pods", "pods/logs", "services", "configmaps", "secrets", "endpoints", "events"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps", "batch"]
+    resources: ["deployments", "replicasets", "statefulsets", "jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jobrequests-developer-namespace
+  namespace: apps
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "pods/logs", "deployments", "replicasets", "statefulsets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  - apiGroups: ["platform.publishing.service.gov.uk"]
+    resources: ["jobrequests", "jobrequestreviews"]
+    verbs: ["get", "list", "watch", "create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -11,5 +46,21 @@ subjects:
 {{ end }}
 roleRef:
   kind: ClusterRole
-  name: cluster-admin
+  name: jobrequests-developer-cluster
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: e2e-admin-permissions
+  namespace: apps
+subjects:
+{{ range . }}
+  - kind: User
+    name: {{ .ARN }}
+    apiGroup: rbac.authorization.k8s.io
+{{ end }}
+roleRef:
+  kind: Role
+  name: jobrequests-developer-namespace
   apiGroup: rbac.authorization.k8s.io
