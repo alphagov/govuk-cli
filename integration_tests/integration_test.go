@@ -17,6 +17,8 @@ var _ = BeforeSuite(func() {
 	ctx := context.Background()
 	Expect(startTestCluster(ctx)).To(Succeed())
 	Expect(SetupKubernetesUsers(ctx)).To(Succeed())
+	_, err := kubectl(ctx, "config", "set-context", "--current", "--namespace=apps")
+	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

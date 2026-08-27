@@ -128,6 +128,11 @@ func startTestCluster(ctx context.Context) error {
 	}
 
 	dynamicClient, err = dynamic.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+
+	_, err = kubectl(ctx, "create", "namespace", "apps")
 	return err
 }
 
