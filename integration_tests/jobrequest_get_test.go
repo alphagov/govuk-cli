@@ -59,7 +59,7 @@ func approvedJobRequestReview(name string, namespace string, jobRequestName stri
 var _ = Describe("jobrequest get", func() {
 	Context("when the JobRequest is in Pending state", func() {
 		const jobRequestName = "run-db-migration"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -100,7 +100,7 @@ var _ = Describe("jobrequest get", func() {
 
 	Context("when the requester ARN is invalid", func() {
 		const jobRequestName = "invalid-requester-arn"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -126,7 +126,7 @@ var _ = Describe("jobrequest get", func() {
 
 	Context("when an invalid number of arguments are passed", func() {
 		It("errors and prints usage", func(ctx SpecContext) {
-			cmd, err := cliCmd(ctx, "jobrequest", "get", "one-job", "another-job", "--kubeconfig", kubeconfigPath, "--namespace", "default")
+			cmd, err := cliCmd(ctx, "jobrequest", "get", "one-job", "another-job", "--kubeconfig", kubeconfigPath, "--namespace", "apps")
 			Expect(err).NotTo(HaveOccurred())
 
 			output, err := cmd.CombinedOutput()
@@ -139,7 +139,7 @@ var _ = Describe("jobrequest get", func() {
 
 	Context("when the requested-by annotation isn't present", func() {
 		const jobRequestName = "no-requested-by-annotation"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -164,7 +164,7 @@ var _ = Describe("jobrequest get", func() {
 
 	Context("when the status state is an empty string", func() {
 		const jobRequestName = "empty-status-state"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -190,7 +190,7 @@ var _ = Describe("jobrequest get", func() {
 	Context("when the JobRequest has a job name in its status", func() {
 		const jobRequestName = "has-job-name"
 		const jobName = "has-job-name-x7k2p"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -211,7 +211,7 @@ var _ = Describe("jobrequest get", func() {
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
 			Expect(string(output)).To(ContainSubstring("Print logs:"))
-			Expect(string(output)).To(ContainSubstring("$ kubectl -n default logs -f job/" + jobName))
+			Expect(string(output)).To(ContainSubstring("$ kubectl -n apps logs -f job/" + jobName))
 		})
 
 		It("includes the job name in the output", func(ctx SpecContext) {
@@ -228,7 +228,7 @@ var _ = Describe("jobrequest get", func() {
 	Context("when the JobRequest references a review that doesn't exist", func() {
 		const jobRequestName = "review-not-found"
 		const reviewName = "review-not-found-review"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -258,14 +258,14 @@ var _ = Describe("jobrequest get", func() {
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
 			Expect(string(output)).To(ContainSubstring("Get review:"))
-			Expect(string(output)).To(ContainSubstring("$ kubectl -n default get jobrequestreview " + reviewName + " -o yaml"))
+			Expect(string(output)).To(ContainSubstring("$ kubectl -n apps get jobrequestreview " + reviewName + " -o yaml"))
 		})
 	})
 
 	Context("when the review has no reviewed-by annotation", func() {
 		const jobRequestName = "review-no-annotation"
 		const reviewName = "review-no-annotation-review"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -296,7 +296,7 @@ var _ = Describe("jobrequest get", func() {
 	Context("when the review has a valid reviewed-by ARN", func() {
 		const jobRequestName = "review-valid-arn"
 		const reviewName = "review-valid-arn-review"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -327,7 +327,7 @@ var _ = Describe("jobrequest get", func() {
 	Context("when the review has an invalid reviewed-by ARN", func() {
 		const jobRequestName = "review-invalid-arn"
 		const reviewName = "review-invalid-arn-review"
-		const namespace = "default"
+		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)

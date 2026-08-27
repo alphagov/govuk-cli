@@ -95,7 +95,7 @@ func kwokNode(name string) *corev1.Node {
 var _ = Describe("jobrequest get --follow", func() {
 	Context("when the JobRequest is deleted while being followed", func() {
 		const jobRequestName = "follow-then-deleted"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a job request deleted error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -124,7 +124,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 	Context("when the JobRequest is in Rejected state", func() {
 		const jobRequestName = "follow-rejected"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a rejected error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -147,7 +147,7 @@ var _ = Describe("jobrequest get --follow", func() {
 
 	Context("when the JobRequest is in Malformed state", func() {
 		const jobRequestName = "follow-malformed"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a malformed error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -171,7 +171,7 @@ var _ = Describe("jobrequest get --follow", func() {
 	Context("when the JobRequest is in an actionable state", func() {
 		const jobRequestName = "follow-actionable"
 		const jobName = "follow-actionable-x7k2p"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("detects the actionable state and starts watching the Job", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -200,7 +200,7 @@ var _ = Describe("jobrequest get --follow", func() {
 	Context("when the Job is deleted while being followed", func() {
 		const jobRequestName = "follow-job-deleted"
 		const jobName = "follow-job-deleted-x7k2p"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a job deleted error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -241,7 +241,7 @@ var _ = Describe("jobrequest get --follow", func() {
 	Context("when the Job gains a start time while being followed", func() {
 		const jobRequestName = "follow-job-starts"
 		const jobName = "follow-job-starts-x7k2p"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("finishes the Job watch loop", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -284,7 +284,7 @@ var _ = Describe("jobrequest get --follow", func() {
 	Context("when the started Job has no pods", func() {
 		const jobRequestName = "follow-no-pods"
 		const jobName = "follow-no-pods-x7k2p"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a no pods found error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -325,7 +325,7 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobRequestName = "follow-pod-deleted"
 		const jobName = "follow-pod-deleted-x7k2p"
 		const podName = "follow-pod-deleted-x7k2p-9fh3s"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("exits with a pod deleted error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -375,7 +375,7 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobRequestName = "follow-pod-starts"
 		const jobName = "follow-pod-starts-x7k2p"
 		const podName = "follow-pod-starts-x7k2p-9fh3s"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("finishes the Pod watch loop and starts tailing logs", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace)
@@ -429,7 +429,7 @@ var _ = Describe("jobrequest get --follow", func() {
 		const jobName = "follow-pod-logs-x7k2p"
 		const podName = "follow-pod-logs-x7k2p-9fh3s"
 		const nodeName = "kwok-node-follow-logs"
-		const namespace = "default"
+		const namespace = "apps"
 
 		It("streams the pod's logs", func(ctx SpecContext) {
 			logsFile := filepath.Join(GinkgoT().TempDir(), "pod.log")

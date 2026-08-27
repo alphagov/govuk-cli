@@ -8,7 +8,7 @@ import (
 )
 
 var _ = Describe("jobrequest create", func() {
-	const namespace = "default"
+	const namespace = "apps"
 
 	Context("when given a resource in the form kind/name", func() {
 		It("creates a JobRequest resolved to the given resource kind", func(ctx SpecContext) {

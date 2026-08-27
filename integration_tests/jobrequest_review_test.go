@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("jobrequest review", func() {
-	const namespace = "default"
+	const namespace = "apps"
 
 	BeforeEach(func() {
 		err := SwitchToKubernetesUser(JobReviewerUser)
