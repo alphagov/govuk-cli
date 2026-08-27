@@ -12,11 +12,6 @@ import (
 var _ = Describe("jobrequest review", func() {
 	const namespace = "apps"
 
-	BeforeEach(func() {
-		err := SwitchToKubernetesUser(JobReviewerUser)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
 	AfterEach(func() {
 		err := SwitchToKubernetesAdminUser()
 		Expect(err).NotTo(HaveOccurred())
@@ -24,6 +19,9 @@ var _ = Describe("jobrequest review", func() {
 
 	Context("when the job request can't be found", func() {
 		It("errors", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", "thisjobdoesntexist", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -36,6 +34,9 @@ var _ = Describe("jobrequest review", func() {
 
 	Context("when an invalid number of arguments are provided", func() {
 		It("errors and prints usage", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", "one-job", "another-job", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -51,6 +52,9 @@ var _ = Describe("jobrequest review", func() {
 		const jobRequestName = "review-not-pending"
 
 		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			jr.Status.State = jrv1.JobRequestApproved
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -61,6 +65,9 @@ var _ = Describe("jobrequest review", func() {
 		})
 
 		It("errors", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -75,6 +82,9 @@ var _ = Describe("jobrequest review", func() {
 		const jobRequestName = "review-already-reviewed"
 
 		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			jr.Status.ReviewName = jobRequestName + "-review"
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
@@ -85,6 +95,9 @@ var _ = Describe("jobrequest review", func() {
 		})
 
 		It("errors", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -124,6 +137,9 @@ var _ = Describe("jobrequest review", func() {
 	// submission so the JobRequestReview is actually created.
 	DescribeTable("accepting a decision and its alias",
 		func(ctx SpecContext, jobRequestName string, stdin string, expectedDecision jrv1.JobRequestReviewState) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -137,6 +153,8 @@ var _ = Describe("jobrequest review", func() {
 					ObjectMeta: metav1.ObjectMeta{Name: reviewName, Namespace: namespace},
 				})).To(Succeed())
 			})
+			err = SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
 
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
@@ -162,6 +180,9 @@ var _ = Describe("jobrequest review", func() {
 		const jobRequestName = "review-invalid-decision"
 
 		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -177,6 +198,9 @@ var _ = Describe("jobrequest review", func() {
 		})
 
 		It("prompts again and accepts a subsequent valid decision", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 			cmd.Stdin = strings.NewReader("maybe\napprove\nlooks good\ny\n")
@@ -197,6 +221,9 @@ var _ = Describe("jobrequest review", func() {
 		const jobRequestName = "review-submit-declined"
 
 		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -206,6 +233,9 @@ var _ = Describe("jobrequest review", func() {
 		})
 
 		It("exits without creating a review", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 			cmd.Stdin = strings.NewReader("a\nlooks good\nn\n")
@@ -224,6 +254,9 @@ var _ = Describe("jobrequest review", func() {
 		const jobRequestName = "review-submit-invalid"
 
 		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			jr := pendingJobRequest(jobRequestName, namespace)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -239,6 +272,9 @@ var _ = Describe("jobrequest review", func() {
 		})
 
 		It("prompts again and accepts a subsequent valid confirmation", func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobReviewerUser)
+			Expect(err).NotTo(HaveOccurred())
+
 			cmd, err := cliCmd(ctx, "jobrequest", "review", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 			cmd.Stdin = strings.NewReader("a\nlooks good\nmaybe\ny\n")
