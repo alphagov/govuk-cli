@@ -38,10 +38,18 @@ var (
 		ARN:  "arn:aws:sts::123456789012:assumed-role/job.rev-tempadmin/e2e",
 		Role: "tempadmin",
 	}
+
+	// IntegrationEnvUser is the user to use for creating JobRequest resources
+	IntegrationEnvUser = &ClusterUser{
+		Name: "job.int",
+		ARN:  "arn:aws:sts::210287912431:assumed-role/job.int-developer/e2e",
+		Role: "developer",
+	}
 	// KubernetesUsers will have kubernetes users provisioned into the cluster. Only Name and ARN need to be specified
 	KubernetesUsers = &ClusterUsers{
 		JobRequesterUser,
 		JobReviewerUser,
+		IntegrationEnvUser,
 	}
 )
 
@@ -212,7 +220,6 @@ func getProjectDir(ctx context.Context) (string, error) {
 
 func retrieveFixtureFilePath(ctx context.Context, fixture string) (string, error) {
 	dir, err := getProjectDir(ctx)
-
 	if err != nil {
 		return dir, fmt.Errorf("failed to get current working directory: %w", err)
 	}

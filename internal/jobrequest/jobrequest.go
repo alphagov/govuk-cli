@@ -13,8 +13,10 @@ import (
 	restclient "k8s.io/client-go/rest"
 )
 
-const JobRequestResourceName = "jobrequests"
-const JobRequestReviewResourceName = "jobrequestreviews"
+const (
+	JobRequestResourceName       = "jobrequests"
+	JobRequestReviewResourceName = "jobrequestreviews"
+)
 
 type JobRequestClient struct {
 	namespace     string
@@ -56,7 +58,7 @@ func (c *JobRequestClient) CreateJobRequest(jobRequest jrv1.JobRequest) error {
 
 func (c *JobRequestClient) JobRequestReview(jobRequestReviewName string) (*jrv1.JobRequestReview, error) {
 	i := c.InterfaceFor(JobRequestReviewResourceName)
-	unstructured, err := i.Get(c.ctx, jobRequestReviewName, metav1.GetOptions{}, "status")
+	unstructured, err := i.Get(c.ctx, jobRequestReviewName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}

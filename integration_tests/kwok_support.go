@@ -100,7 +100,8 @@ func startTestCluster(ctx context.Context) error {
 
 	// The Logs CRD lets tests serve a local file as a pod's container logs
 	// through kwok's fake kubelet, so log streaming can be tested end-to-end.
-	_, err = kwokctl(ctx,
+	_, err = kwokctl(
+		ctx,
 		"create", "cluster",
 		"--kubeconfig", kubeconfigPath,
 		"--runtime", "binary",
@@ -400,10 +401,21 @@ func createJobRequestReview(ctx context.Context, jrr *jrv1.JobRequestReview) err
 	u.SetAPIVersion(jrv1.SchemeGroupVersion.String())
 	u.SetKind("JobRequestReview")
 
-	_, err = dynamicClient.
+	i := dynamicClient.
 		Resource(jrv1.SchemeGroupVersion.WithResource("jobrequestreviews")).
-		Namespace(jrr.Namespace).
-		Create(ctx, u, metav1.CreateOptions{})
+		Namespace(jrr.Namespace)
+
+	created, err := i.Create(ctx, u, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	status, hasStatus := obj["status"]
+	if !hasStatus {
+		return nil
+	}
+	created.Object["status"] = status
+	_, err = i.UpdateStatus(ctx, created, metav1.UpdateOptions{})
 	return err
 }
 

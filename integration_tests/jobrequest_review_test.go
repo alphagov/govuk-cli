@@ -55,7 +55,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestApproved
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -85,7 +85,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = jobRequestName + "-review"
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
@@ -115,7 +115,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -135,12 +135,13 @@ var _ = Describe("jobrequest review", func() {
 	// The review command reads the decision, an optional comment and a submit
 	// confirmation from stdin, one line each. A trailing "y" confirms the
 	// submission so the JobRequestReview is actually created.
-	DescribeTable("accepting a decision and its alias",
+	DescribeTable(
+		"accepting a decision and its alias",
 		func(ctx SpecContext, jobRequestName string, stdin string, expectedDecision jrv1.JobRequestReviewState) {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -183,7 +184,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -224,7 +225,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -257,7 +258,7 @@ var _ = Describe("jobrequest review", func() {
 			err := SwitchToKubernetesUser(JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
-			jr := pendingJobRequest(jobRequestName, namespace)
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {

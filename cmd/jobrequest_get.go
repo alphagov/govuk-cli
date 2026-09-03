@@ -11,8 +11,10 @@ import (
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
+	"github.com/alphagov/govuk-cli/internal/whoami"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	"github.com/spf13/cobra"
+	restclient "k8s.io/client-go/rest"
 )
 
 var getCmd = &cobra.Command{
@@ -27,7 +29,6 @@ tail logs for the resulting job, use the --follow flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace := cmd.Flag("namespace").Value.String()
 		follow, err := cmd.Flags().GetBool("follow")
-
 		if err != nil {
 			log.Error("Error getting follow flag", "error", err)
 			os.Exit(1)
@@ -43,6 +44,12 @@ tail logs for the resulting job, use the --follow flag.`,
 		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
+			os.Exit(1)
+		}
+
+		outputLogsUrl, err := initLogUrlGenerator(kubeConfig, client)
+		if err != nil {
+			log.Error("Error creating kube client for whoami", "error", err)
 			os.Exit(1)
 		}
 
@@ -106,6 +113,8 @@ tail logs for the resulting job, use the --follow flag.`,
 			cobra.CheckErr(err)
 			_, err = lipgloss.Println(style.CommandStyle.Render(kubectlCommand))
 			cobra.CheckErr(err)
+
+			outputLogsUrl(jr)
 		}
 
 		if jr.Status.ReviewName != "" {
@@ -128,4 +137,41 @@ tail logs for the resulting job, use the --follow flag.`,
 
 func init() {
 	jobrequestCmd.AddCommand(getCmd)
+}
+
+func initLogUrlGenerator(kubeconfigClient *restclient.Config, jobRequestClient *jobrequest.JobRequestClient) (func(*jrv1.JobRequest), error) {
+	whoamiClient, err := whoami.CreateWhoAmIClient(kubeconfigClient)
+	if err != nil {
+		log.Debugf("Couldn't create kubernetes WhoAmI client, skipping OpenSearch logs url output. Error: %s", err.Error())
+		return nil, err
+	}
+
+	userIdentity, err := whoamiClient.WhoAmI()
+	if err != nil {
+		log.Debugf("Couldn't execute WhoAmI query against Kuberentes, skipping OpenSearch logs url output. Error: %s", err.Error())
+		return nil, err
+	}
+
+	return func(jr *jrv1.JobRequest) {
+		if jr.Status.ReviewName != "" {
+			jrr, err := jobRequestClient.JobRequestReview(jr.Status.ReviewName)
+			if err != nil {
+				log.Debug("Error getting JobRequestReview resource, skipping OpenSearch logs url output.", "error", err, "jobRequestReviewName", jr.Status.ReviewName)
+				return
+			}
+
+			url := jobrequest.BuildLogsUrl(jr, jrr, jobrequest.CurrentAccountId(userIdentity.AccountId))
+
+			if url == "" {
+				log.Debug("Failed to build OpenSearch Logs url, skipping OpenSearch logs url output")
+				return
+			}
+
+			_, err = lipgloss.Println(style.BoldStyle.Render("View logs in OpenSearch:"))
+			cobra.CheckErr(err)
+
+			_, err = lipgloss.Println(style.RenderHyperLink(url))
+			cobra.CheckErr(err)
+		}
+	}, nil
 }

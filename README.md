@@ -115,6 +115,32 @@ Unit tests can be run with `make unit_tests`, integration tests with `make integ
 This project uses GoReleaser to build release artifacts such as macOS universal binaries, shell completions and a Homebrew cask.
 Run `goreleaser release --snapshot --clean` to build all release artifacts.
 
+### Creating and reviewing Job Requests
+
+Create your job request, then use [impersonate](https://kubernetes.io/docs/reference/access-authn-authz/user-impersonation/) to create your own job request review.
+
+(users can't do this because they don't have the permission/ verb to "impersonate" on their roles)
+
+```jrr.yaml
+apiVersion: platform.publishing.service.gov.uk/v1
+kind: JobRequestReview
+metadata:
+  name: <job-request-review-name>
+  namespace: apps
+spec:
+  decision: Approved
+  description: doing some manual testing for some changes in the cli
+  jobRequestName: <job-request-name>
+```
+
+The following will fail with a permissions error:
+
+`kubectl apply -f jrr.yaml --as=<your-user-arn-with-your-username-changed> --as-group=system:basic-user`
+
+The following will create the job request review and "Approve" your job request
+
+`kubectl apply -f jrr.yaml --as=<your-user-arn-with-your-username-changed> --as-group=system:masters`
+
 ### Release a new version
 
 This project uses [Semantic Versioning](https://semver.org/).
