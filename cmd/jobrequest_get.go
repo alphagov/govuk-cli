@@ -77,7 +77,7 @@ tail logs for the resulting job, use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		if jr.Status.ReviewName != "" {
+		if jr.HasBeenReviewed() {
 			var reviewedBy string
 
 			jrr, err := client.JobRequestReview(jr.Status.ReviewName)
@@ -117,7 +117,7 @@ tail logs for the resulting job, use the --follow flag.`,
 			outputLogsUrl(jr)
 		}
 
-		if jr.Status.ReviewName != "" {
+		if !jr.HasBeenReviewed() {
 			kubectlCommand := fmt.Sprintf("$ kubectl -n %s get jobrequestreview %s -o yaml", shellescape.Quote(namespace), shellescape.Quote(jr.Status.ReviewName))
 			_, err = lipgloss.Println(style.BoldStyle.Render("Get review:"))
 			cobra.CheckErr(err)
