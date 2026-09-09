@@ -20,15 +20,15 @@ import (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use: "create source-workload command [arg] ...",
-	Example: `govuk-cli jobrequest create deploy/whitehall-admin rake 'my:task[some,args]'
+	Use: "create <deployment> -- command [arg] ...",
+	Example: `govuk-cli jobrequest create deploy/whitehall-admin -- rake 'my:task[some,args]'
 govuk-cli jobrequest new signon rake hello:world`,
 	Aliases: []string{"new"},
 	Short:   "Create a new job request",
 	Long: `Create a new job request.
 
-Job environment (env vars, service accounts, etc) is pulled from source-workload.
-Command returns a `,
+Job environment (env vars, service accounts, etc) is copied from the deployment specified.
+The command you specify will be executed by the created Job`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
 			log.Error("Not enough arguments provided")
