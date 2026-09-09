@@ -7,7 +7,7 @@ tool sigs.k8s.io/kwok/cmd/kwokctl
 require (
 	al.essio.dev/pkg/shellescape v1.6.0
 	charm.land/lipgloss/v2 v2.0.6
-	charm.land/log/v2 v2.0.0
+	charm.land/log/v2 v2.0.1
 	github.com/alphagov/govuk-job-request-operator v0.0.14
 	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.43.0
