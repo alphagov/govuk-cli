@@ -20,6 +20,10 @@ unit_tests:
 .PHONY: integration_tests
 integration_tests: govuk-debug
 	go test -race -v ./integration_tests
+
+.PHONY: lint
+lint:
+	golangci-lint run
 		
 .PHONY: coverage_report
 coverage_report:
