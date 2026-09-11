@@ -13,8 +13,7 @@ import (
 // get a lipgloss table filled with a list of JobRequests
 func (c *JobRequestClient) JobRequestDetailsListTable(jrs []*jrv1.JobRequest) (*table.Table, error) {
 	headers := []string{
-		// For now leaving out reviewed name since it means calling the API for every JR to get the JRR
-		"Name", "State", "Created By" /*"Reviewed By",*/, "Created Time",
+		"Name", "State", "Created By", "Created Time",
 	}
 
 	t := style.ListTable(headers)
