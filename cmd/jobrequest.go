@@ -22,5 +22,4 @@ func init() {
 
 	jobrequestCmd.PersistentFlags().String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube", "config"), "Path to the kubeconfig file to use for CLI requests.")
 	jobrequestCmd.PersistentFlags().StringP("namespace", "n", "apps", "The namespace scope for this CLI request")
-	jobrequestCmd.PersistentFlags().BoolP("follow", "f", false, "Wait for Job to be created and tail logs")
 }

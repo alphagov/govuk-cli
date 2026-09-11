@@ -164,6 +164,8 @@ use the --follow flag.`,
 }
 
 func init() {
+	reviewCommand.Flags().BoolP("follow", "f", false, "Wait for Job to be created and tail logs")
+
 	jobrequestCmd.AddCommand(reviewCommand)
 }
 

@@ -152,9 +152,10 @@ The command you specify will be executed by the created Job`,
 }
 
 func init() {
-	jobrequestCmd.AddCommand(createCmd)
-
 	createCmd.Flags().StringP("container", "c", "app", "Name of the container to pull configuration from")
+	createCmd.Flags().BoolP("follow", "f", false, "Wait for Job to be created and tail logs")
+
+	jobrequestCmd.AddCommand(createCmd)
 }
 
 func commandAndArgs(parts []string) (string, []string) {

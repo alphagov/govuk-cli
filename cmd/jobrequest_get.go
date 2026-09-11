@@ -136,6 +136,8 @@ tail logs for the resulting job, use the --follow flag.`,
 }
 
 func init() {
+	getCmd.Flags().BoolP("follow", "f", false, "Wait for Job to be created and tail logs")
+
 	jobrequestCmd.AddCommand(getCmd)
 }
 
