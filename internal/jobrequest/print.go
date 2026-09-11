@@ -10,6 +10,43 @@ import (
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 )
 
+// get a lipgloss table filled with a list of JobRequests
+func (c *JobRequestClient) JobRequestDetailsListTable(jrs []*jrv1.JobRequest) (*table.Table, error) {
+	headers := []string{
+		// For now leaving out reviewed name since it means calling the API for every JR to get the JRR
+		"Name", "State", "Created By" /*"Reviewed By",*/, "Created Time",
+	}
+
+	t := style.ListTable(headers)
+
+	for _, jobRequest := range jrs {
+		row, err := c.addJobRequestListRow(jobRequest)
+		if err != nil {
+			return nil, err
+		}
+		t.Row(row...)
+	}
+
+	return t, nil
+}
+
+func (c *JobRequestClient) addJobRequestListRow(jr *jrv1.JobRequest) ([]string, error) {
+	jobName := jr.Name
+	state := string(jr.Status.State)
+	createdByArn, err := jr.GetRequestedBy()
+	if err != nil {
+		return []string{}, err
+	}
+	createdByUserIdentity, err := jrv1.ParseUserIdentityFromARN(createdByArn)
+	if err != nil {
+		return []string{}, err
+	}
+
+	createdAt := jr.GetCreationTimestamp().Format("2006/01/02 15:04:05")
+
+	return []string{jobName, state, createdByUserIdentity.UserName, createdAt}, nil
+}
+
 // get a lipgloss table filled with details of a JobRequest resource
 func (c *JobRequestClient) JobRequestDetailsKVTable(jr *jrv1.JobRequest) (*table.Table, error) {
 	requestedBy, err := jr.GetRequestedBy()
