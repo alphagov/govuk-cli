@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Short: "List job requests",
 	Example: `govuk-cli jobrequest list
 govuk-cli jobrequest list --mine`,
-	Long: "Get a list of your jobrequests (with the --mine flag), or all jobrequests from the cluster,.",
+	Long: "Get a list of your jobrequests (with the --mine flag), or all jobrequests from the cluster.",
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
