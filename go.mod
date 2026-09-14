@@ -5,7 +5,7 @@ go 1.27.1
 tool sigs.k8s.io/kwok/cmd/kwokctl
 
 require (
-	al.essio.dev/pkg/shellescape v1.6.0
+	al.essio.dev/pkg/shellescape v1.6.1
 	charm.land/lipgloss/v2 v2.0.6
 	charm.land/log/v2 v2.0.1
 	github.com/alphagov/govuk-job-request-operator v0.0.14
