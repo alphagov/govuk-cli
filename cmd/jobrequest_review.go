@@ -68,13 +68,13 @@ use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		if jr.Status.State != jrv1.JobRequestPending {
-			log.Error("Only pending job requests are reviewable", "currentState", jr.Status.State)
+		if jr.HasBeenReviewed() {
+			log.Error("Job request has already been reviewed", "reviewName", jr.Status.ReviewName)
 			os.Exit(1)
 		}
 
-		if jr.HasBeenReviewed() {
-			log.Error("Job request has already been reviewed", "reviewName", jr.Status.ReviewName)
+		if jr.Status.State != jrv1.JobRequestPending {
+			log.Error("Only pending job requests are reviewable", "currentState", jr.Status.State)
 			os.Exit(1)
 		}
 
