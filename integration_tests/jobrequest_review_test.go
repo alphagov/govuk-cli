@@ -56,7 +56,7 @@ var _ = Describe("jobrequest review", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
-			jr.Status.State = jrv1.JobRequestApproved
+			jr.Status.State = jrv1.JobRequestMalformed
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -87,6 +87,7 @@ var _ = Describe("jobrequest review", func() {
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = jobRequestName + "-review"
+			jr.Status.State = jrv1.JobRequestApproved
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
