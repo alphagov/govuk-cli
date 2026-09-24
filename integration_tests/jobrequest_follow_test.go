@@ -640,6 +640,10 @@ var _ = Describe("jobrequest get --follow", func() {
 				"--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -681,6 +685,10 @@ var _ = Describe("jobrequest get --follow", func() {
 				},
 			}
 			Expect(createJob(ctx, job)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJob(ctx, job)).To(Succeed())
+			})
 
 			// and follow it
 			Eventually(session.Err, "10s").Should(gbytes.Say("job request state is actionable"))
