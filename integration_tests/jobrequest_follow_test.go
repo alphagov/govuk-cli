@@ -643,7 +643,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 
-			DeferCleanup(func() {
+			DeferCleanup(func(ctx SpecContext) {
 				session.Kill().Wait()
 			})
 
