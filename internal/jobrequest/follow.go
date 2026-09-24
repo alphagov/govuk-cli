@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"time"
 
 	"charm.land/log/v2"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
@@ -16,6 +17,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 )
+
+// How many times to retry if a job comes back without a name. Each retry is
+// delayed by n^2 seconds.
+const jobNameRetries = 3
 
 // wait for a JobRequest to enter an actionable state
 func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobRequest, error) {
@@ -29,6 +34,7 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 	defer w.Stop()
 	log.Debug("starting watch for JobRequest", "jobRequest", jobRequestName)
 	// Wait for JobRequest to transition to an actionable state
+	jobNameRetry := 1
 	for {
 		event := <-w.ResultChan()
 		log.Debug("got watch event for jobrequest", "event", event)
@@ -50,15 +56,30 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 		}
 		switch jr.Status.State {
 		case jrv1.JobRequestApproved, jrv1.JobRequestStarted, jrv1.JobRequestComplete, jrv1.JobRequestFailed:
-			log.Debug("job request state is actionable",
+			log.Debug(
+				"job request state is actionable",
 				"jr", jobRequestName,
 				"state", jr.Status.State,
 			)
 			if jr.Status.JobName != "" {
 				log.Debug("breaking JobRequest loop", "jobName", jr.Status.JobName)
 				return jr, nil
-			} else {
+			} else if jobNameRetry == jobNameRetries+1 {
 				return nil, fmt.Errorf("job request '%s' is in actionable state with no jobName", jobRequestName)
+			} else {
+				// Job does not have a name yet: retry with an exponential
+				// backoff
+				retryDuration := 1 << jobNameRetry
+				log.Debug(
+					"job request '%s' does not have a name: %d/%d in %ds",
+					jobNameRetry,
+					jobNameRetries,
+					jobRequestName,
+					retryDuration,
+				)
+
+				time.Sleep(time.Duration(retryDuration) * time.Second)
+				jobNameRetry += 1
 			}
 		case jrv1.JobRequestRejected:
 			log.Debug("job request rejected", "jr", jobRequestName)
