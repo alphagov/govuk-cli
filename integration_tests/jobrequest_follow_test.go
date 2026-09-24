@@ -219,6 +219,10 @@ var _ = Describe("jobrequest get --follow", func() {
 			jr.Status.JobName = jobName
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
 			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--follow", "--log-level", "debug", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -646,13 +650,6 @@ var _ = Describe("jobrequest get --follow", func() {
 			// wait 'til we start watching
 			Eventually(session.Err, "5s").Should(gbytes.Say("starting watch for JobRequest"))
 
-			// --- Pre-ticket, incorrect, behaviour
-			// Eventually(session).Should(gexec.Exit(1))
-			// Expect(string(session.Err.Contents())).To(
-			// 	ContainSubstring("is in actionable state with no jobName")
-			// )
-			// ---
-
 			// set a jobrequest name
 			err = SwitchToKubernetesAdminUser()
 			Expect(err).NotTo(HaveOccurred())
@@ -660,6 +657,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			jobName := "job-" + jobRequestName
 			jr.Status.JobName = jobName
 			Expect(updateJobRequestStatus(ctx, jr)).To(Succeed())
+			Expect(jr.Status.State).To(Equal(jrv1.JobRequestApproved))
 
 			// make a job with that name
 			job := &batchv1.Job{

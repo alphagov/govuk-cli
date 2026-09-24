@@ -64,24 +64,22 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 			if jr.Status.JobName != "" {
 				log.Debug("breaking JobRequest loop", "jobName", jr.Status.JobName)
 				return jr, nil
+			} else if jobNameRetry == jobNameRetries+1 {
+				return nil, fmt.Errorf("job request '%s' is in actionable state with no jobName", jobRequestName)
 			} else {
-				if jobNameRetry == jobNameRetries+1 {
-					return nil, fmt.Errorf("job request '%s' is in actionable state with no jobName", jobRequestName)
-				} else {
-					// Job does not have a name yet: retry with an exponential
-					// backoff
-					retryDuration := 1 << jobNameRetry
-					log.Debug(
-						"job request '%s' does not have a name: %d/%d in %ds",
-						jobNameRetry,
-						jobNameRetries,
-						jobRequestName,
-						retryDuration,
-					)
+				// Job does not have a name yet: retry with an exponential
+				// backoff
+				retryDuration := 1 << jobNameRetry
+				log.Debug(
+					"job request '%s' does not have a name: %d/%d in %ds",
+					jobNameRetry,
+					jobNameRetries,
+					jobRequestName,
+					retryDuration,
+				)
 
-					time.Sleep(time.Duration(retryDuration) * time.Second)
-					jobNameRetry += 1
-				}
+				time.Sleep(time.Duration(retryDuration) * time.Second)
+				jobNameRetry += 1
 			}
 		case jrv1.JobRequestRejected:
 			log.Debug("job request rejected", "jr", jobRequestName)
