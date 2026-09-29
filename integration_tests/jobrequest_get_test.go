@@ -93,8 +93,8 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring(string(jrv1.JobRequestPending)))
 			Expect(string(output)).To(ContainSubstring(fmt.Sprintf("%s (%s)", JobRequesterUser.Name, JobRequesterUser.Role)))
 			Expect(string(output)).To(ContainSubstring("deployment/publishing-api"))
+			Expect(string(output)).To(ContainSubstring("Get review:"))
 			Expect(string(output)).ToNot(ContainSubstring("Print logs:"))
-			Expect(string(output)).ToNot(ContainSubstring("Get review:"))
 			Expect(string(output)).ToNot(ContainSubstring("Job Name"))
 			Expect(string(output)).ToNot(ContainSubstring("View logs in OpenSearch:"))
 			Expect(string(output)).ToNot(ContainSubstring("https://kibana.logit.io"))
@@ -332,6 +332,7 @@ var _ = Describe("jobrequest get", func() {
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
+			jr.Status.State = jrv1.JobRequestStarted
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -354,15 +355,15 @@ var _ = Describe("jobrequest get", func() {
 			Expect(string(output)).To(ContainSubstring("[Error getting JobRequestReview]"))
 		})
 
-		It("prints the kubectl command to get the review", func(ctx SpecContext) {
+		It("does not print a kubectl command to get the review", func(ctx SpecContext) {
 			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--kubeconfig", kubeconfigPath, "--namespace", namespace)
 			Expect(err).NotTo(HaveOccurred())
 
 			output, err := cmd.CombinedOutput()
 			Expect(err).NotTo(HaveOccurred(), string(output))
 
-			Expect(string(output)).To(ContainSubstring("Get review:"))
-			Expect(string(output)).To(ContainSubstring("$ kubectl -n apps get jobrequestreview " + reviewName + " -o yaml"))
+			Expect(string(output)).NotTo(ContainSubstring("Get review:"))
+			Expect(string(output)).NotTo(ContainSubstring("$ kubectl -n apps get jobrequestreview " + reviewName + " -o yaml"))
 		})
 	})
 
@@ -377,6 +378,7 @@ var _ = Describe("jobrequest get", func() {
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
+			jr.Status.State = jrv1.JobRequestStarted
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			jrr := approvedJobRequestReview(reviewName, namespace, jobRequestName)
@@ -416,6 +418,7 @@ var _ = Describe("jobrequest get", func() {
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
+			jr.Status.State = jrv1.JobRequestStarted
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			jrr := approvedJobRequestReview(reviewName, namespace, jobRequestName)
@@ -455,6 +458,7 @@ var _ = Describe("jobrequest get", func() {
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.ReviewName = reviewName
+			jr.Status.State = jrv1.JobRequestStarted
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			jrr := approvedJobRequestReview(reviewName, namespace, jobRequestName)
