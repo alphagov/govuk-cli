@@ -31,11 +31,12 @@ use the --follow flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace := cmd.Flag("namespace").Value.String()
 		follow, err := cmd.Flags().GetBool("follow")
-
 		if err != nil {
 			log.Error("Error getting follow flag", "error", err)
 			os.Exit(1)
 		}
+
+		ctx := cmd.Context()
 
 		kubeconfigFlag := cmd.Flags().Lookup("kubeconfig")
 		kubeConfig, err := kubernetes.CreateKubeConfig(kubeconfigFlag)
@@ -44,7 +45,7 @@ use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
+		client, err := jobrequest.CreateJobRequestClient(ctx, kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)

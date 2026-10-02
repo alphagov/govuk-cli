@@ -27,6 +27,8 @@ govuk-cli jobrequest list --mine`,
 			os.Exit(1)
 		}
 
+		ctx := cmd.Context()
+
 		mine, err := cmd.Flags().GetBool("mine")
 		if err != nil {
 			log.Error("Error getting flag 'mine'", "error", err)
@@ -48,7 +50,7 @@ govuk-cli jobrequest list --mine`,
 			os.Exit(1)
 		}
 
-		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
+		client, err := jobrequest.CreateJobRequestClient(ctx, kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)
