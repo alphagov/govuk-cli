@@ -140,6 +140,7 @@ func (c *JobRequestClient) ListJobRequests(forUser *jrv1.UserIdentity, apiPagina
 
 	return jobRequests, nil
 }
+
 func (c *JobRequestClient) unstructuredToStructuredJobRequestList(unstructuredList *unstructured.UnstructuredList) ([]*jrv1.JobRequest, error) {
 	jobRequests := make([]*jrv1.JobRequest, len(unstructuredList.Items))
 
@@ -175,7 +176,7 @@ func (c *JobRequestClient) filterJobRequestListForUser(jobRequestList []*jrv1.Jo
 	return jobRequests, nil
 }
 
-func CreateJobRequestClient(kubeRestClientConfig *restclient.Config, namespace string) (*JobRequestClient, error) {
+func CreateJobRequestClient(ctx context.Context, kubeRestClientConfig *restclient.Config, namespace string) (*JobRequestClient, error) {
 	log.Debug("creating job request client")
 	dynamic, err := dynamic.NewForConfig(kubeRestClientConfig)
 	if err != nil {
@@ -190,7 +191,7 @@ func CreateJobRequestClient(kubeRestClientConfig *restclient.Config, namespace s
 	return &JobRequestClient{
 		clientSet:     clientset,
 		dynamicClient: dynamic,
-		ctx:           context.Background(),
+		ctx:           ctx,
 		namespace:     namespace,
 	}, nil
 }

@@ -36,6 +36,8 @@ The command you specify will be executed by the created Job`,
 			os.Exit(1)
 		}
 
+		ctx := cmd.Context()
+
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
 			log.Error("Error getting namespace flag value", "error", err)
@@ -60,7 +62,7 @@ The command you specify will be executed by the created Job`,
 			log.Error("error creating kubeconfig", "error", err)
 			os.Exit(1)
 		}
-		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
+		client, err := jobrequest.CreateJobRequestClient(ctx, kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)

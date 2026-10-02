@@ -601,4 +601,98 @@ var _ = Describe("jobrequest get --follow", func() {
 			Eventually(session.Err, "10s").Should(gbytes.Say("migration finished"))
 		})
 	})
+
+	Context("when the JobRequest does not yet have a name", func() {
+		// we can't create a job without a name, so set it then clear it
+		const jobRequestName = "temp-name"
+		const namespace = "apps"
+
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("retries until there is a name", func(ctx SpecContext) {
+			// Create a job which is Approved but has no name
+			jr := pendingJobRequest(
+				jobRequestName,
+				namespace,
+				JobRequesterUser.ARN,
+			)
+			jr.Status.State = jrv1.JobRequestApproved
+			jr.Status.JobName = ""
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			err := SwitchToKubernetesUser(JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Start following
+			cmd, err := cliCmd(ctx,
+				"jobrequest", "get", jobRequestName,
+				"--follow",
+				"--log-level", "debug",
+				"--kubeconfig", kubeconfigPath,
+				"--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func(ctx SpecContext) {
+				session.Kill().Wait()
+			})
+
+			// wait 'til we start watching
+			Eventually(session.Err, "5s").Should(gbytes.Say("starting watch for JobRequest"))
+
+			// set a jobrequest name
+			err = SwitchToKubernetesAdminUser()
+			Expect(err).NotTo(HaveOccurred())
+
+			jobName := "job-" + jobRequestName
+			jr.Status.JobName = jobName
+			Expect(updateJobRequestStatus(ctx, jr)).To(Succeed())
+			Expect(jr.Status.State).To(Equal(jrv1.JobRequestApproved))
+
+			// make a job with that name
+			job := &batchv1.Job{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      jobName,
+					Namespace: namespace,
+				},
+				Spec: batchv1.JobSpec{
+					Suspend: new(false),
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyNever,
+							Containers: []corev1.Container{
+								{
+									Name:  "app",
+									Image: "publishing-api:latest",
+								},
+							},
+						},
+					},
+				},
+			}
+			Expect(createJob(ctx, job)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJob(ctx, job)).To(Succeed())
+			})
+
+			// and follow it
+			Eventually(session.Err, "10s").Should(gbytes.Say("job request state is actionable"))
+			Eventually(session.Err, "10s").Should(gbytes.Say("starting watch for Job"))
+		})
+	})
 })

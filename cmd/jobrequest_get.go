@@ -34,6 +34,8 @@ tail logs for the resulting job, use the --follow flag.`,
 			os.Exit(1)
 		}
 
+		ctx := cmd.Context()
+
 		kubeconfigFlag := cmd.Flags().Lookup("kubeconfig")
 		kubeConfig, err := kubernetes.CreateKubeConfig(kubeconfigFlag)
 		if err != nil {
@@ -41,7 +43,7 @@ tail logs for the resulting job, use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		client, err := jobrequest.CreateJobRequestClient(kubeConfig, namespace)
+		client, err := jobrequest.CreateJobRequestClient(ctx, kubeConfig, namespace)
 		if err != nil {
 			log.Error("Error creating job request client", "error", err)
 			os.Exit(1)

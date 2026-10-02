@@ -27,48 +27,66 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 		return nil, err
 	}
 	defer w.Stop()
+
 	log.Debug("starting watch for JobRequest", "jobRequest", jobRequestName)
+
 	// Wait for JobRequest to transition to an actionable state
 	for {
-		event := <-w.ResultChan()
-		log.Debug("got watch event for jobrequest", "event", event)
-		// Handle non-update events
-		switch event.Type {
-		case watch.Deleted:
-			return nil, errors.New("job request deleted")
-		case watch.Error:
-			return nil, errors.New("received error from K8s watch API")
-		}
-		u, isOk := event.Object.(*unstructured.Unstructured)
-		if !isOk {
-			log.Error("error casting jobrequest event.Object", "object", event.Object)
-			return nil, errors.New("failed to cast jobrequest event.Object to unstructured.Unstructured")
-		}
-		jr := &jrv1.JobRequest{}
-		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, jr); err != nil {
-			return nil, err
-		}
-		switch jr.Status.State {
-		case jrv1.JobRequestApproved, jrv1.JobRequestStarted, jrv1.JobRequestComplete, jrv1.JobRequestFailed:
-			log.Debug("job request state is actionable",
-				"jr", jobRequestName,
-				"state", jr.Status.State,
-			)
-			if jr.Status.JobName != "" {
-				log.Debug("breaking JobRequest loop", "jobName", jr.Status.JobName)
-				return jr, nil
-			} else {
-				return nil, fmt.Errorf("job request '%s' is in actionable state with no jobName", jobRequestName)
+		select {
+		// Top-level timeout or SIGINT
+		case <-c.ctx.Done():
+			return nil, c.ctx.Err()
+
+		case event, isOk := <-w.ResultChan():
+			if !isOk {
+				return nil, errors.New("watch channel closed unexpectedly")
 			}
-		case jrv1.JobRequestRejected:
-			log.Debug("job request rejected", "jr", jobRequestName)
-			return nil, fmt.Errorf("job request '%s' has been rejected", jobRequestName)
-		case jrv1.JobRequestMalformed:
-			log.Debug("job request malformed", "jr", jobRequestName)
-			return nil, errors.New("malformed job request resource")
-		case jrv1.JobRequestPending:
-			log.Debug("job request pending", "jr", jobRequestName)
-			continue
+
+			log.Debug("got watch event for jobrequest", "event", event)
+			switch event.Type {
+
+			case watch.Deleted:
+				return nil, errors.New("job request deleted")
+			case watch.Error:
+				return nil, errors.New("received error from K8s watch API")
+			}
+			u, isOk := event.Object.(*unstructured.Unstructured)
+			if !isOk {
+				log.Error("error casting jobrequest event.Object", "object", event.Object)
+				return nil, errors.New("failed to cast jobrequest event.Object to unstructured.Unstructured")
+			}
+			jr := &jrv1.JobRequest{}
+			if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, jr); err != nil {
+				return nil, err
+			}
+			switch jr.Status.State {
+			case jrv1.JobRequestApproved, jrv1.JobRequestStarted, jrv1.JobRequestComplete, jrv1.JobRequestFailed:
+				log.Debug(
+					"job request state is actionable",
+					"jr", jobRequestName,
+					"state", jr.Status.State,
+				)
+				if jr.Status.JobName != "" {
+					log.Debug("breaking JobRequest loop", "jobName", jr.Status.JobName)
+					return jr, nil
+				} else {
+					log.Debug(
+						"waiting for a job name for job request",
+						"jobRequestName", jobRequestName,
+					)
+
+					continue
+				}
+			case jrv1.JobRequestRejected:
+				log.Debug("job request rejected", "jr", jobRequestName)
+				return nil, fmt.Errorf("job request '%s' has been rejected", jobRequestName)
+			case jrv1.JobRequestMalformed:
+				log.Debug("job request malformed", "jr", jobRequestName)
+				return nil, errors.New("malformed job request resource")
+			case jrv1.JobRequestPending:
+				log.Debug("job request pending", "jr", jobRequestName)
+				continue
+			}
 		}
 	}
 }
