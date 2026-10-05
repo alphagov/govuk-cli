@@ -98,12 +98,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -137,12 +137,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -170,12 +170,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -204,12 +204,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -243,12 +243,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -294,12 +294,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -347,12 +347,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -398,12 +398,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -458,12 +458,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -521,8 +521,8 @@ var _ = Describe("jobrequest get --follow", func() {
 		const nodeName = "kwok-node-follow-logs"
 		const namespace = "apps"
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -535,7 +535,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			node := kwokNode(nodeName)
 			Expect(createNode(ctx, node)).To(Succeed())
 
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			DeferCleanup(func(ctx SpecContext) {
@@ -608,12 +608,12 @@ var _ = Describe("jobrequest get --follow", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -628,7 +628,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			jr.Status.JobName = ""
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Start following
@@ -655,7 +655,7 @@ var _ = Describe("jobrequest get --follow", func() {
 			Eventually(session.Err, "5s").Should(gbytes.Say("starting watch for JobRequest"))
 
 			// set a jobrequest name
-			err = SwitchToKubernetesAdminUser()
+			err = SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 
 			jobName := "job-" + jobRequestName

@@ -13,13 +13,13 @@ var _ = Describe("jobrequest list", func() {
 	const namespace = "apps"
 
 	Context("when there are no JobRequests", Ordered, func() {
-		BeforeAll(func() {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+		BeforeAll(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterAll(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterAll(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -49,12 +49,12 @@ var _ = Describe("jobrequest list", func() {
 				Expect(deleteJobRequest(ctx, jrReviewer1)).To(Succeed())
 			})
 
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterAll(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterAll(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -104,12 +104,12 @@ var _ = Describe("jobrequest list", func() {
 				Expect(deleteJobRequest(ctx, jrReviewer2)).To(Succeed())
 			})
 
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterAll(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterAll(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
