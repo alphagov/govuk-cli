@@ -16,7 +16,7 @@ type WhoAmIClient struct {
 	ctx          context.Context
 }
 
-func CreateWhoAmIClient(kubeRestClientConfig *restclient.Config) (*WhoAmIClient, error) {
+func CreateWhoAmIClient(ctx context.Context, kubeRestClientConfig *restclient.Config) (*WhoAmIClient, error) {
 	log.Debug("create whoami client")
 
 	client, err := authv1client.NewForConfig(kubeRestClientConfig)
@@ -26,7 +26,7 @@ func CreateWhoAmIClient(kubeRestClientConfig *restclient.Config) (*WhoAmIClient,
 
 	return &WhoAmIClient{
 		authv1Client: client,
-		ctx:          context.Background(),
+		ctx:          ctx,
 	}, nil
 }
 

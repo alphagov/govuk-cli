@@ -66,7 +66,7 @@ govuk-cli jobrequest list --mine`,
 
 		var userIdentity *jrv1.UserIdentity = nil
 		if mine {
-			whoamiClient, err := whoami.CreateWhoAmIClient(kubeConfig)
+			whoamiClient, err := whoami.CreateWhoAmIClient(ctx, kubeConfig)
 			if err != nil {
 				log.Errorf("Couldn't create kubernetes WhoAmI client, error: %s", err.Error())
 				os.Exit(1)
