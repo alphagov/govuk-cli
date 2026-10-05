@@ -10,7 +10,7 @@ require (
 	charm.land/log/v2 v2.0.1
 	github.com/alphagov/govuk-job-request-operator v0.2.7
 	github.com/onsi/ginkgo/v2 v2.33.0
-	github.com/onsi/gomega v1.43.1
+	github.com/onsi/gomega v1.44.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	k8s.io/api v0.37.0
