@@ -3,6 +3,8 @@ package cmd
 import (
 	"path/filepath"
 
+	"charm.land/log/v2"
+	"github.com/alphagov/govuk-cli/cmd/completions"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
 )
@@ -24,4 +26,9 @@ func init() {
 	jobrequestCmd.PersistentFlags().StringP("namespace", "n", "apps", "The namespace scope for this CLI request")
 	jobrequestCmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 
+	err := jobrequestCmd.RegisterFlagCompletionFunc("namespace", completions.KubernetesNamespaces)
+
+	if err != nil {
+		log.Debug("Couldn't register Namepsace auto completion function")
+	}
 }
