@@ -22,7 +22,7 @@ govuk-cli jobrequest list --mine`,
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
-			log.Error("Error getting flag 'mine'", "error", err)
+			log.Error("Error getting flag 'namespace'", "error", err)
 			cobra.CheckErr(cmd.Help())
 			os.Exit(1)
 		}
