@@ -29,15 +29,27 @@ func CreateCoreV1Client(ctx context.Context, kubeRestClientConfig *restclient.Co
 }
 
 func (c *CoreV1Client) GetNamespaceNames() ([]string, error) {
-	namespaceList, err := c.corev1Client.Namespaces().List(c.ctx, metav1.ListOptions{})
-	if err != nil {
-		return []string{}, nil
+	listOptions := metav1.ListOptions{
+		Limit:          100,
+		TimeoutSeconds: new(int64(2)),
 	}
 
-	namespaceNames := make([]string, len(namespaceList.Items))
+	namespaceNames := []string{}
+	for {
+		namespaceList, err := c.corev1Client.Namespaces().List(c.ctx, listOptions)
+		if err != nil {
+			return namespaceNames, err
+		}
 
-	for i, namespace := range namespaceList.Items {
-		namespaceNames[i] = namespace.Name
+		for _, namespace := range namespaceList.Items {
+			namespaceNames = append(namespaceNames, namespace.Name)
+		}
+
+		if namespaceList.Continue == "" {
+			break
+		}
+
+		listOptions.Continue = namespaceList.Continue
 	}
 
 	return namespaceNames, nil
