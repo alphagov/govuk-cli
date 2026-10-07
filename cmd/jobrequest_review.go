@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -79,7 +80,7 @@ use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		reviewerDifferentThanRequester, err := isReviewerDifferentFromRequester(kubeConfig, jr)
+		reviewerDifferentThanRequester, err := isReviewerDifferentFromRequester(ctx, kubeConfig, jr)
 		if err != nil {
 			log.Error("Error looking up reviewer and requester details", "error", err)
 			os.Exit(1)
@@ -226,7 +227,7 @@ func parseSubmitInput(reader *bufio.Reader) {
 }
 
 // Check if the reviewer and the requester are different users
-func isReviewerDifferentFromRequester(kubeRestClientConfig *restclient.Config, jr *jrv1.JobRequest) (bool, error) {
+func isReviewerDifferentFromRequester(ctx context.Context, kubeRestClientConfig *restclient.Config, jr *jrv1.JobRequest) (bool, error) {
 	requestedByAnnotation, err := jr.GetRequestedBy()
 	if err != nil {
 		log.Errorf("Could not get the requested-by annotation from the JobRequest, error: %s", err.Error())
@@ -242,7 +243,7 @@ func isReviewerDifferentFromRequester(kubeRestClientConfig *restclient.Config, j
 		return false, err
 	}
 
-	whoamiClient, err := whoami.CreateWhoAmIClient(kubeRestClientConfig)
+	whoamiClient, err := whoami.CreateWhoAmIClient(ctx, kubeRestClientConfig)
 	if err != nil {
 		log.Errorf("Couldn't create kubernetes WhoAmI client, error: %s", err.Error())
 		return false, err

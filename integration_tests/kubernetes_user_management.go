@@ -157,16 +157,16 @@ func SetupKubernetesUsers(ctx context.Context) error {
 	return nil
 }
 
-func SwitchToKubernetesAdminUser() error {
-	return switchToUser(fmt.Sprintf("kwok-%s", clusterName))
+func SwitchToKubernetesAdminUser(ctx context.Context) error {
+	return switchToUser(ctx, fmt.Sprintf("kwok-%s", clusterName))
 }
 
-func SwitchToKubernetesUser(clusterUser *ClusterUser) error {
-	return switchToUser(clusterUser.KubectlUserName)
+func SwitchToKubernetesUser(ctx context.Context, clusterUser *ClusterUser) error {
+	return switchToUser(ctx, clusterUser.KubectlUserName)
 }
 
-func switchToUser(kubectlUserName string) error {
-	_, err := kubectl(context.Background(), "config", "set-context", "--current", "--user", kubectlUserName)
+func switchToUser(ctx context.Context, kubectlUserName string) error {
+	_, err := kubectl(ctx, "config", "set-context", "--current", "--user", kubectlUserName)
 	return err
 }
 

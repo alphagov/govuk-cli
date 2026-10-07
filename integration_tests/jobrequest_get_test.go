@@ -65,7 +65,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -76,8 +76,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -116,7 +116,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -128,8 +128,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -147,12 +147,12 @@ var _ = Describe("jobrequest get", func() {
 
 	Context("when an invalid number of arguments are passed", func() {
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -173,7 +173,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -185,8 +185,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -206,7 +206,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -218,8 +218,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -239,13 +239,13 @@ var _ = Describe("jobrequest get", func() {
 		const jobName = "has-job-name-x7k2p"
 		const namespace = "apps"
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("prints the kubectl logs command", func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -269,7 +269,7 @@ var _ = Describe("jobrequest get", func() {
 
 		It("prints the job logs url", func(ctx SpecContext) {
 			const reviewName = "review-valid-arn-review"
-			err := SwitchToKubernetesUser(IntegrationEnvUser)
+			err := SwitchToKubernetesUser(ctx, IntegrationEnvUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, IntegrationEnvUser.ARN)
@@ -299,7 +299,7 @@ var _ = Describe("jobrequest get", func() {
 		})
 
 		It("includes the job name in the output", func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -327,7 +327,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -340,8 +340,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -373,7 +373,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -391,8 +391,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -413,7 +413,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -430,8 +430,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -453,7 +453,7 @@ var _ = Describe("jobrequest get", func() {
 		const namespace = "apps"
 
 		BeforeEach(func(ctx SpecContext) {
-			err := SwitchToKubernetesUser(JobRequesterUser)
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
 			Expect(err).NotTo(HaveOccurred())
 
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
@@ -471,8 +471,8 @@ var _ = Describe("jobrequest get", func() {
 			})
 		})
 
-		AfterEach(func() {
-			err := SwitchToKubernetesAdminUser()
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
