@@ -9,7 +9,8 @@ import (
 )
 
 type deploymentTemplateData struct {
-	Name string
+	Name           string
+	ContainerNames []string
 }
 
 var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
@@ -34,9 +35,12 @@ var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
 		for _, deploymentName := range deploymentNames {
 			manifestPath := path.Join(tmpDir, deploymentName+".yaml")
 			err := renderTemplate(ctx,
-				"govukReplatformTestApp.template.yaml",
+				"deployment.template.yaml",
 				manifestPath,
-				&deploymentTemplateData{Name: deploymentName},
+				&deploymentTemplateData{
+					Name:           deploymentName,
+					ContainerNames: []string{"nginx-1"},
+				},
 			)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -118,9 +122,12 @@ var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
 
 		manifestPath := path.Join(tmpDir, otherDeploymentName+".yaml")
 		err := renderTemplate(ctx,
-			"govukReplatformTestApp.template.yaml",
+			"deployment.template.yaml",
 			manifestPath,
-			&deploymentTemplateData{Name: otherDeploymentName},
+			&deploymentTemplateData{
+				Name:           otherDeploymentName,
+				ContainerNames: []string{"nginx-1"},
+			},
 		)
 		Expect(err).NotTo(HaveOccurred())
 
