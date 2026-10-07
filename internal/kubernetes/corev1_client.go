@@ -28,10 +28,10 @@ func CreateCoreV1Client(ctx context.Context, kubeRestClientConfig *restclient.Co
 	}, nil
 }
 
-func (c *CoreV1Client) GetNamespaceNames() ([]string, error) {
+func (c *CoreV1Client) GetNamespaceNames(paginationLimit int64) ([]string, error) {
 	listOptions := metav1.ListOptions{
-		Limit:          100,
-		TimeoutSeconds: new(int64(2)),
+		Limit:          paginationLimit,
+		TimeoutSeconds: new(int64(3)),
 	}
 
 	namespaceNames := []string{}
