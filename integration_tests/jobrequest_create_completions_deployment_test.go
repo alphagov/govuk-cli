@@ -13,7 +13,7 @@ type deploymentTemplateData struct {
 	ContainerNames []string
 }
 
-var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
+var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() {
 	// These are purposefully out of order
 	deploymentNames := []string{
 		"baz",
