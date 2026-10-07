@@ -8,19 +8,20 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type deploymentTemplateData struct {
-	Name           string
-	ContainerNames []string
-}
-
-var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() {
+var _ = Describe("jobrequest create container autocompletion", Ordered, func() {
+	targetDeploymentName := "container-test-deployment"
+	nonTargetDeploymentName := "container-test-other-deployment"
 	// These are purposefully out of order
-	deploymentNames := []string{
+	targetContainerNames := []string{
 		"baz",
 		"foo",
 		"quux",
 		"bar",
 		"quz",
+	}
+	nonTargetContainerNames := []string{
+		"flibble",
+		"wibble",
 	}
 
 	var tmpDir string
@@ -28,77 +29,79 @@ var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() 
 	BeforeAll(func(ctx SpecContext) {
 		var err error
 
-		By("Creating test deployments")
-		tmpDir, err = os.MkdirTemp("", "govuk-cli-integration-tests-deployment-templates-*")
+		By("Creating a test deployment with multiple containers")
+		tmpDir, err = os.MkdirTemp("", "govuk-cli-integration-tests-container-completion-*")
 		Expect(err).NotTo(HaveOccurred())
 
-		for _, deploymentName := range deploymentNames {
-			manifestPath := path.Join(tmpDir, deploymentName+".yaml")
-			err := renderTemplate(ctx,
-				"deployment.template.yaml",
-				manifestPath,
-				&deploymentTemplateData{
-					Name:           deploymentName,
-					ContainerNames: []string{"nginx-1"},
-				},
-			)
-			Expect(err).NotTo(HaveOccurred())
+		manifestPath := path.Join(tmpDir, targetDeploymentName+".yaml")
+		err = renderTemplate(ctx,
+			"deployment.template.yaml",
+			manifestPath,
+			&deploymentTemplateData{
+				Name:           targetDeploymentName,
+				ContainerNames: targetContainerNames,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
 
-			_, err = kubectl(ctx, "apply", "-n", "apps", "-f", manifestPath)
-			Expect(err).NotTo(HaveOccurred())
-		}
+		_, err = kubectl(ctx, "apply", "-n", "apps", "-f", manifestPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("Creating another deployment with differently named containers")
+		manifestPath = path.Join(tmpDir, nonTargetDeploymentName+".yaml")
+
+		err = renderTemplate(ctx,
+			"deployment.template.yaml",
+			manifestPath,
+			&deploymentTemplateData{
+				Name:           nonTargetDeploymentName,
+				ContainerNames: nonTargetContainerNames,
+			},
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = kubectl(ctx, "apply", "-n", "apps", "-f", manifestPath)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterAll(func(ctx SpecContext) {
-		By("Deleting test deployments")
-		for _, deploymentName := range deploymentNames {
-			_, err := kubectl(ctx, "delete", "deployment", "-n", "apps", deploymentName)
-			Expect(err).NotTo(HaveOccurred())
-		}
-
 		if tmpDir != "" {
 			Expect(os.RemoveAll(tmpDir)).To(Succeed())
 		}
+
+		By("Deleting the target test deployment")
+		_, err := kubectl(ctx, "delete", "deployment", "-n", "apps", targetDeploymentName)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("Deleting the non-target test deployment")
+		_, err = kubectl(ctx, "delete", "deployment", "-n", "apps", nonTargetDeploymentName)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("completes all deployments when none are specified", func(ctx SpecContext) {
-		cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", "")
+	It("completes all containers when none are specified", func(ctx SpecContext) {
+		cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", targetDeploymentName, "-c", "")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
 
 		completionResult, err := getCompletionResult(cliCmd)
 		Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
 
 		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
-		Expect(completionResult.Suggestions).To(ContainElements(deploymentNames))
-	})
-
-	It("completes all deployments when responses are paginated", func(ctx SpecContext) {
-		cliCmd, err := completionCliCmd(ctx, "jobrequest", "--pagination-limit", "2", "create", "")
-		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
-
-		completionResult, err := getCompletionResult(cliCmd)
-		Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
-
-		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
-		Expect(completionResult.Suggestions).To(ContainElements(deploymentNames))
+		Expect(completionResult.Suggestions).To(ContainElements(targetContainerNames))
+		Expect(completionResult.Suggestions).NotTo(ContainElements(nonTargetContainerNames))
 	})
 
 	DescribeTable(
-		"completes deployment names including the prefix when a valid kubernetes deployment prefix is used",
+		"completes container names where the deployment has a valid kubernetes deployment prefix",
 		func(ctx SpecContext, prefix string) {
-			deploymentNamesWithPrefix := make([]string, len(deploymentNames))
-			for i, deploymentName := range deploymentNames {
-				deploymentNamesWithPrefix[i] = prefix + deploymentName
-			}
-
-			cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", prefix)
+			cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", prefix+targetDeploymentName, "-c", "")
 			Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
 
 			completionResult, err := getCompletionResult(cliCmd)
 			Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
 
 			Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
-			Expect(completionResult.Suggestions).To(ContainElements(deploymentNamesWithPrefix))
+			Expect(completionResult.Suggestions).To(ContainElements(targetContainerNames))
+			Expect(completionResult.Suggestions).NotTo(ContainElements(nonTargetContainerNames))
 		},
 		Entry("with deployment/ as a prefix", "deployment/"),
 		Entry("with deployments/ as a prefix", "deployments/"),
@@ -106,7 +109,7 @@ var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() 
 	)
 
 	It("generates completions based on the partial value already typed", func(ctx SpecContext) {
-		cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", "qu")
+		cliCmd, err := completionCliCmd(ctx, "jobrequest", "create", targetDeploymentName, "-c", "qu")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
 
 		completionResult, err := getCompletionResult(cliCmd)
@@ -114,11 +117,14 @@ var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() 
 
 		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
 		Expect(completionResult.Suggestions).To(ContainElements([]string{"quux", "quz"}))
+		Expect(completionResult.Suggestions).NotTo(ContainElements("baz"))
+		Expect(completionResult.Suggestions).NotTo(ContainElements(nonTargetContainerNames))
 	})
 
 	It("respects the namespace flag and lists deployments in the namespace specified if already in the command", func(ctx SpecContext) {
 		By("Creating a deployment in a namespace other than 'apps'")
 		otherDeploymentName := "other-namespace-deployment"
+		containerName := "other-container-name"
 
 		manifestPath := path.Join(tmpDir, otherDeploymentName+".yaml")
 		err := renderTemplate(ctx,
@@ -126,7 +132,7 @@ var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() 
 			manifestPath,
 			&deploymentTemplateData{
 				Name:           otherDeploymentName,
-				ContainerNames: []string{"nginx-1"},
+				ContainerNames: []string{containerName},
 			},
 		)
 		Expect(err).NotTo(HaveOccurred())
@@ -140,19 +146,19 @@ var _ = Describe("jobrequest create deployment autocompletion", Ordered, func() 
 		}()
 
 		By("Testing the completion command")
-		cliCmd, err := completionCliCmd(ctx, "jobrequest", "-n", "default", "create", "")
+		cliCmd, err := completionCliCmd(ctx, "jobrequest", "-n", "default", "create", otherDeploymentName, "-c", "")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
 
 		completionResult, err := getCompletionResult(cliCmd)
 		Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
 
 		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
-		Expect(completionResult.Suggestions).To(ContainElements(otherDeploymentName))
-		Expect(completionResult.Suggestions).NotTo(ContainElements(deploymentNames))
+		Expect(completionResult.Suggestions).To(ContainElements(containerName))
+		Expect(completionResult.Suggestions).NotTo(ContainElements(targetContainerNames))
 	})
 
 	It("does not generate any suggestions when the user is not authenticated", func(ctx SpecContext) {
-		cliCmd, err := cliCmd(ctx, "__complete", "jobrequest", "create", "")
+		cliCmd, err := cliCmd(ctx, "__complete", "jobrequest", "create", targetDeploymentName, "-c", "")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
 
 		completionResult, err := getCompletionResult(cliCmd)
