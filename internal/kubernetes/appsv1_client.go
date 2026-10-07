@@ -28,10 +28,10 @@ func CreateAppsV1Client(ctx context.Context, kubeRestClientConfig *restclient.Co
 	}, nil
 }
 
-func (c *AppsV1Client) GetDeploymentNames(namespace string) ([]string, error) {
+func (c *AppsV1Client) GetDeploymentNames(namespace string, paginationLimit int64) ([]string, error) {
 	listOptions := metav1.ListOptions{
-		Limit:          100,
-		TimeoutSeconds: new(int64(2)),
+		Limit:          paginationLimit,
+		TimeoutSeconds: new(int64(3)),
 	}
 
 	deploymentNames := []string{}
