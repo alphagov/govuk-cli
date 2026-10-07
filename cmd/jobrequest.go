@@ -24,6 +24,7 @@ func init() {
 
 	jobrequestCmd.PersistentFlags().String("kubeconfig", filepath.Join(homedir.HomeDir(), ".kube", "config"), "Path to the kubeconfig file to use for CLI requests.")
 	jobrequestCmd.PersistentFlags().StringP("namespace", "n", "apps", "The namespace scope for this CLI request")
+	jobrequestCmd.PersistentFlags().Int64("pagination-limit", 100, "Set the maxium items retrieved in a single call to the kubernetes API when making paginated requests")
 
 	// Disable file completions for all commands and flags unless overridden
 	jobrequestCmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
