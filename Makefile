@@ -3,6 +3,9 @@ go_files := $(shell find . -type f -name '*.go') go.mod go.sum
 govuk: ${go_files}
 	go build -o govuk main.go
 
+govuk-cli: ${go_files}
+	go build -o govuk-cli main.go
+
 govuk-debug: ${go_files}
 	env $(GO_BUILD_ENV) go build -o govuk-debug -cover -covermode atomic main.go
 	GOCOVERDIR=coverage/version ./govuk-debug --version
