@@ -112,7 +112,6 @@ govuk-cli jobrequest list --mine`,
 
 func init() {
 	listCmd.Flags().Bool("mine", false, "List only JobRequests you created")
-	listCmd.Flags().Int64("pagination-limit", 100, "Set the maxium items retrieved in a single call to the kubernetes API")
 
 	jobrequestCmd.AddCommand(listCmd)
 }

@@ -17,13 +17,19 @@ func KubernetesNamespaces(cmd *cobra.Command, args []string, toComplete string) 
 		return []string{}, cobra.ShellCompDirectiveError
 	}
 
+	paginationLimit, err := cmd.Flags().GetInt64("pagination-limit")
+	if err != nil {
+		cobra.CompError("error getting pagination-limit as an Int64")
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+
 	client, err := kubernetes.CreateCoreV1Client(cmd.Context(), kubeConfig)
 	if err != nil {
 		cobra.CompError(fmt.Sprintf("error creating corev1 client: %s", err.Error()))
 		return []string{}, cobra.ShellCompDirectiveError
 	}
 
-	namespaceNames, err := client.GetNamespaceNames()
+	namespaceNames, err := client.GetNamespaceNames(paginationLimit)
 	if err != nil {
 		cobra.CompError(fmt.Sprintf("error getting list of namespaces: %s", err.Error()))
 		return []string{}, cobra.ShellCompDirectiveError

@@ -42,6 +42,17 @@ var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
 		Expect(completionResult.Suggestions).To(ContainElements(namespaces))
 	})
 
+	It("completes all namespaces when responses are paginated", func(ctx SpecContext) {
+		cliCmd, err := completionCliCmd(ctx, "jobrequest", "--pagination-limit", "2", "-n", "")
+		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
+
+		completionResult, err := getCompletionResult(cliCmd)
+		Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
+
+		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
+		Expect(completionResult.Suggestions).To(ContainElements(namespaces))
+	})
+
 	It("generates completions based on the partial value already typed", func(ctx SpecContext) {
 		cliCmd, err := completionCliCmd(ctx, "jobrequest", "-n", "qu")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")

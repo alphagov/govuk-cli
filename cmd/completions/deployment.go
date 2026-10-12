@@ -29,13 +29,19 @@ func KubernetesDeployments(cmd *cobra.Command, args []string, toComplete string)
 		return []string{}, cobra.ShellCompDirectiveError
 	}
 
+	paginationLimit, err := cmd.Flags().GetInt64("pagination-limit")
+	if err != nil {
+		cobra.CompError("error getting pagination-limit as an Int64")
+		return []string{}, cobra.ShellCompDirectiveError
+	}
+
 	client, err := kubernetes.CreateAppsV1Client(cmd.Context(), kubeConfig)
 	if err != nil {
 		cobra.CompError(fmt.Sprintf("error creating appsv1 client: %s", err.Error()))
 		return []string{}, cobra.ShellCompDirectiveError
 	}
 
-	deploymentNames, err := client.GetDeploymentNames(cmd.Flag("namespace").Value.String())
+	deploymentNames, err := client.GetDeploymentNames(cmd.Flag("namespace").Value.String(), paginationLimit)
 	if err != nil {
 		cobra.CompError(fmt.Sprintf("error getting list of namespaces: %s", err.Error()))
 		return []string{}, cobra.ShellCompDirectiveError

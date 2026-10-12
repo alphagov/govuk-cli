@@ -68,6 +68,17 @@ var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
 		Expect(completionResult.Suggestions).To(ContainElements(deploymentNames))
 	})
 
+	It("completes all deployments when responses are paginated", func(ctx SpecContext) {
+		cliCmd, err := completionCliCmd(ctx, "jobrequest", "--pagination-limit", "2", "create", "")
+		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")
+
+		completionResult, err := getCompletionResult(cliCmd)
+		Expect(err).NotTo(HaveOccurred(), "Couldn't parse completion results")
+
+		Expect(completionResult.CobraCompletionDirectiveName).To(Equal("ShellCompDirectiveNoFileComp"))
+		Expect(completionResult.Suggestions).To(ContainElements(deploymentNames))
+	})
+
 	DescribeTable(
 		"completes deployment names including the prefix when a valid kubernetes deployment prefix is used",
 		func(ctx SpecContext, prefix string) {
