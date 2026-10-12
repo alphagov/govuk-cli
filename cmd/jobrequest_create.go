@@ -10,6 +10,7 @@ import (
 	"al.essio.dev/pkg/shellescape"
 	"charm.land/lipgloss/v2"
 	"charm.land/log/v2"
+	"github.com/alphagov/govuk-cli/cmd/completions"
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
@@ -29,6 +30,14 @@ govuk-cli jobrequest new signon rake hello:world`,
 
 Job environment (env vars, service accounts, etc) is copied from the deployment specified.
 The command you specify will be executed by the created Job`,
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+		// Only offer autocomplete suggestions for the first argument to the command
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		return completions.KubernetesDeployments(cmd, args, toComplete)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
 			log.Error("Not enough arguments provided")
