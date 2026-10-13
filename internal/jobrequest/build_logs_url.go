@@ -40,7 +40,7 @@ func BuildLogsUrl(jobRequest *jrv1.JobRequest, review *jrv1.JobRequestReview, cu
 		return baseKibanaUrl + logitProdEnvUid + urlPath
 	}
 
-	log.Debugf("Environment does not have a OpenSearch cluster, so cannot build proper OpenSearch logs url\n")
+	log.Debugf("Environment does not have an OpenSearch cluster, so cannot build proper OpenSearch logs url\n")
 
 	return ""
 }

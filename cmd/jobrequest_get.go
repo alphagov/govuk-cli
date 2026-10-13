@@ -158,7 +158,9 @@ func initLogUrlGenerator(ctx context.Context, kubeconfigClient *restclient.Confi
 	}
 
 	return func(jr *jrv1.JobRequest) {
-		if jr.Status.ReviewName != "" {
+		if jr.Status.ReviewName == "" {
+			log.Debug("job request status has no ReviewName")
+		} else {
 			jrr, err := jobRequestClient.JobRequestReview(jr.Status.ReviewName)
 			if err != nil {
 				log.Debug("Error getting JobRequestReview resource, skipping OpenSearch logs url output.", "error", err, "jobRequestReviewName", jr.Status.ReviewName)
