@@ -8,6 +8,7 @@ import (
 	"al.essio.dev/pkg/shellescape"
 	"charm.land/lipgloss/v2"
 	"charm.land/log/v2"
+	"github.com/alphagov/govuk-cli/cmd/completions"
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 
@@ -21,6 +22,14 @@ var logsCmd = &cobra.Command{
 	Example: `govuk-cli jobrequest logs <jobrequest>
 govuk-cli jobrequest logs <jobrequest> --follow`,
 	Long: "Get the logs for a jobrequest, optionally following them as they are updated.",
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+		// Only offer autocomplete suggestions for the first argument to the command
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		return completions.JobRequest(cmd, args, toComplete)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace := cmd.Flag("namespace").Value.String()
 
