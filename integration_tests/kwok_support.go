@@ -31,6 +31,7 @@ const clusterName = "govuk-cli-test"
 var (
 	kubeconfigPath string
 	dynamicClient  *dynamic.DynamicClient
+	namespaces     = []string{"apps", "other-namespace"}
 )
 
 // kwokctl runs a kwokctl command against the test cluster.
@@ -133,7 +134,9 @@ func startTestCluster(ctx context.Context) error {
 		return err
 	}
 
-	_, err = kubectl(ctx, "create", "namespace", "apps")
+	for _, namespace := range namespaces {
+		_, err = kubectl(ctx, "create", "namespace", namespace)
+	}
 	return err
 }
 

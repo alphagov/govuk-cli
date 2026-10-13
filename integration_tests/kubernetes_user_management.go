@@ -53,7 +53,7 @@ var (
 	}
 )
 
-func SetupKubernetesUsers(ctx context.Context) error {
+func SetupKubernetesUsers(ctx context.Context, namespaces []string) error {
 	tempDir, err := os.MkdirTemp("", "govuk-cli-integration-tests-*")
 	if err != nil {
 		return err
@@ -143,8 +143,16 @@ func SetupKubernetesUsers(ctx context.Context) error {
 		}
 	}
 
+	type RoleBindingData struct {
+		Users      ClusterUsers
+		Namespaces []string
+	}
+
 	roleBindingManifestFilePath := filepath.Join(tempDir, "role_bindings.yaml")
-	err = renderTemplate(ctx, "user_setup/role_binding.template.yaml", roleBindingManifestFilePath, *KubernetesUsers)
+	err = renderTemplate(ctx, "user_setup/role_binding.template.yaml", roleBindingManifestFilePath, &RoleBindingData{
+		Users:      *KubernetesUsers,
+		Namespaces: namespaces,
+	})
 	if err != nil {
 		return err
 	}

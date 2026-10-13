@@ -9,6 +9,7 @@ import (
 	"al.essio.dev/pkg/shellescape"
 	"charm.land/lipgloss/v2"
 	"charm.land/log/v2"
+	"github.com/alphagov/govuk-cli/cmd/completions"
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
@@ -27,6 +28,14 @@ govuk-cli jobrequest get jr-12345678 -f`,
 
 If you want to wait for the job request to be reviewed and
 tail logs for the resulting job, use the --follow flag.`,
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+		// Only offer autocomplete suggestions for the first argument to the command
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+
+		return completions.JobRequest(cmd, args, toComplete)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		namespace := cmd.Flag("namespace").Value.String()
 		follow, err := cmd.Flags().GetBool("follow")
