@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("jobrequest namespace autocompletion", Ordered, func() {
+var _ = Describe("jobrequest kubeconfig autocompletion", Ordered, func() {
 	It("provides auto complete suggestions for filenames", func(ctx SpecContext) {
 		cliCmd, err := completionCliCmd(ctx, "jobrequest", "--kubeconfig", "")
 		Expect(err).NotTo(HaveOccurred(), "Couldn't create completion cli command")

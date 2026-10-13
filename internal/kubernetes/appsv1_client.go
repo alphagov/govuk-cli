@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"charm.land/log/v2"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appsv1client "k8s.io/client-go/kubernetes/typed/apps/v1"
 	restclient "k8s.io/client-go/rest"
@@ -53,4 +54,23 @@ func (c *AppsV1Client) GetDeploymentNames(namespace string, paginationLimit int6
 	}
 
 	return deploymentNames, nil
+}
+
+func (c *AppsV1Client) GetContainerNamesInDeployment(namespace, deploymentName string) ([]string, error) {
+	containerNames := []string{}
+
+	deployment, err := c.appsv1Client.Deployments(namespace).Get(c.ctx, deploymentName, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) || apierrors.IsGone(err) {
+		return containerNames, nil
+	} else if err != nil {
+		return containerNames, err
+	}
+
+	containersInDeployment := deployment.Spec.Template.Spec.Containers
+
+	for _, container := range containersInDeployment {
+		containerNames = append(containerNames, container.Name)
+	}
+
+	return containerNames, nil
 }
