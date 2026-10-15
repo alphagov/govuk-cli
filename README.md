@@ -98,6 +98,26 @@ Example commands:
 * `govuk-cli jobrequest create signon rake 'some:task' -f`
 * `govuk-cli jobrequest review jr-signon-123456789 -f`
 
+#### Viewing logs
+
+Follow the logs for an existing job:
+
+```shell
+$ govuk jobrequest logs jr-govuk-replatform-test-app-119631169 --follow
+```
+
+If a job's logs have been purged from Kubernetes, `govuk jobrequest logs` will
+give you a link to Logit:
+
+```shell
+$ govuk-cli jobrequest logs jr-signon-123456789
+...
+View logs in OpenSearch:
+https://kibana.logit.io/s/42f4d2d5-e9ce-451f-8ffc-cdb25bd624f8/app/data-explorer/discover#?_g=
+...
+```
+
+
 ## Development
 
 ### Prerequisites
