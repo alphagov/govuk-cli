@@ -45,11 +45,18 @@ var (
 		ARN:  "arn:aws:sts::210287912431:assumed-role/job.int-developer/e2e",
 		Role: "developer",
 	}
+	// NonARNUser is a user whose Kubernetes username is not a valid AWS ARN
+	NonARNUser = &ClusterUser{
+		Name: "job.nonarn",
+		ARN:  "e2e-not-an-arn",
+		Role: "developer",
+	}
 	// KubernetesUsers will have kubernetes users provisioned into the cluster. Only Name and ARN need to be specified
 	KubernetesUsers = &ClusterUsers{
 		JobRequesterUser,
 		JobReviewerUser,
 		IntegrationEnvUser,
+		NonARNUser,
 	}
 )
 

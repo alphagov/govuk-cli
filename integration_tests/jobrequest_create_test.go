@@ -3,8 +3,10 @@ package integration_tests
 import (
 	"regexp"
 
+	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("jobrequest create", func() {
@@ -82,4 +84,40 @@ var _ = Describe("jobrequest create", func() {
 			Expect(string(output)).To(ContainSubstring("deployment/create-default-app"))
 		})
 	})
+})
+
+var _ = Describe("jobrequest create review message", func() {
+	const namespace = "apps"
+
+	AfterEach(func(ctx SpecContext) {
+		Expect(SwitchToKubernetesAdminUser(ctx)).To(Succeed())
+	})
+
+	DescribeTable("names the environment the review is needed in",
+		func(ctx SpecContext, user *ClusterUser, expectedEnvName string, expectedError string) {
+			Expect(SwitchToKubernetesUser(ctx, user)).To(Succeed())
+
+			cmd, err := cliCmd(ctx, "jobrequest", "create", "create-default-app", "echo", "hello", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).NotTo(HaveOccurred(), string(output))
+
+			jrName := regexp.MustCompile(`jr-create-default-app-\d+`).FindString(string(output))
+			Expect(jrName).NotTo(BeEmpty(), string(output))
+
+			if expectedError != "" {
+				Expect(output).To(ContainSubstring(expectedError))
+			}
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, &jrv1.JobRequest{ObjectMeta: metav1.ObjectMeta{Name: jrName, Namespace: namespace}})).To(Succeed())
+			})
+
+			Expect(string(output)).To(ContainSubstring("I need a job request reviewing in %s:", expectedEnvName))
+		},
+		Entry("when the user's ARN is in a known AWS account", IntegrationEnvUser, "integration", ""),
+		Entry("when the user's ARN is in an unknown AWS account", JobRequesterUser, "(unknown)", "unknown account ID '123456789012'"),
+		Entry("when the user's username is not a valid ARN", NonARNUser, "(unknown)", "does not appear to be a valid assumed-role ARN"),
+	)
 })

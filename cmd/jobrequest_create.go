@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"math/rand/v2"
 	"os"
@@ -14,9 +15,11 @@ import (
 	"github.com/alphagov/govuk-cli/internal/jobrequest"
 	"github.com/alphagov/govuk-cli/internal/kubernetes"
 	"github.com/alphagov/govuk-cli/internal/style"
+	"github.com/alphagov/govuk-cli/internal/whoami"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 // createCmd represents the create command
@@ -145,11 +148,15 @@ The command you specify will be executed by the created Job`,
 		_, err = lipgloss.Println(t)
 		cobra.CheckErr(err)
 
-		approveCommand := fmt.Sprintf("$ govuk-cli jobrequest review -n %s %s", shellescape.Quote(jr.Namespace), shellescape.Quote(jr.Name))
+		envName := environmentName(ctx, kubeConfig)
 
-		_, err = lipgloss.Println(style.BoldStyle.Render("Review command:"))
+		approveCommand := fmt.Sprintf("govuk-cli jobrequest review -n %s %s", shellescape.Quote(jr.Namespace), shellescape.Quote(jr.Name))
+
+		italic := lipgloss.NewStyle().Italic(true)
+
+		_, err = lipgloss.Println(style.BoldStyle.Render("Get your request reviewed by a colleague:"))
 		cobra.CheckErr(err)
-		_, err = lipgloss.Println(style.CommandStyle.Render(approveCommand))
+		_, err = lipgloss.Println(italic.Render(fmt.Sprintf("I need a job request reviewing in %s: `%s`", envName, approveCommand)))
 		cobra.CheckErr(err)
 
 		if follow {
@@ -183,4 +190,18 @@ func commandAndArgs(parts []string) (string, []string) {
 func generateJrName(sourceWorkload string) string {
 	num := strconv.Itoa(int(rand.Int32()))
 	return fmt.Sprintf("jr-%s-%s", sourceWorkload, num)
+}
+
+func environmentName(ctx context.Context, config *rest.Config) string {
+	whoamiClient, err := whoami.CreateWhoAmIClient(ctx, config)
+	if err != nil {
+		log.Warn("Error creating WhoAmIClient while resolving AWS account ID to account name", "error", err)
+		return "(unknown)"
+	}
+	accountName, err := whoamiClient.AccountName()
+	if err != nil {
+		log.Warn("Error resolving AWS account ID to account name", "error", err)
+		return "(unknown)"
+	}
+	return *accountName
 }
