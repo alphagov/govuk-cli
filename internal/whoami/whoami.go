@@ -2,6 +2,7 @@ package whoami
 
 import (
 	"context"
+	"fmt"
 
 	"charm.land/log/v2"
 	jrv1 "github.com/alphagov/govuk-job-request-operator/api/v1"
@@ -10,6 +11,12 @@ import (
 	authv1client "k8s.io/client-go/kubernetes/typed/authentication/v1"
 	restclient "k8s.io/client-go/rest"
 )
+
+var awsAccounts = map[string]string{
+	"210287912431": "integration",
+	"696911096973": "staging",
+	"172025368201": "production",
+}
 
 type WhoAmIClient struct {
 	authv1Client *authv1client.AuthenticationV1Client
@@ -46,4 +53,16 @@ func (c *WhoAmIClient) WhoAmI() (*jrv1.UserIdentity, error) {
 	}
 
 	return userIdentity, nil
+}
+
+func (c *WhoAmIClient) AccountName() (*string, error) {
+	identity, err := c.WhoAmI()
+	if err != nil {
+		return nil, err
+	}
+	name, ok := awsAccounts[identity.AccountId]
+	if !ok {
+		return nil, fmt.Errorf("unknown account ID '%s'", identity.AccountId)
+	}
+	return &name, nil
 }
