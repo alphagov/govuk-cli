@@ -82,6 +82,6 @@ func streamLogs(c *JobRequestClient, podName string, follow bool) error {
 			}
 			return err
 		}
-		print(line)
+		fmt.Print(line)
 	}
 }

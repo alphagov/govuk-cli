@@ -59,7 +59,7 @@ tail logs for the resulting job, use the --follow flag.`,
 			os.Exit(1)
 		}
 
-		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client)
+		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client, os.Stdout)
 		if err != nil {
 			log.Error("Error creating kube client for whoami", "error", err)
 			os.Exit(1)
@@ -153,7 +153,7 @@ func init() {
 	jobrequestCmd.AddCommand(getCmd)
 }
 
-func initLogUrlGenerator(ctx context.Context, kubeconfigClient *restclient.Config, jobRequestClient *jobrequest.JobRequestClient) (func(*jrv1.JobRequest), error) {
+func initLogUrlGenerator(ctx context.Context, kubeconfigClient *restclient.Config, jobRequestClient *jobrequest.JobRequestClient, outputTo *os.File) (func(*jrv1.JobRequest), error) {
 	whoamiClient, err := whoami.CreateWhoAmIClient(ctx, kubeconfigClient)
 	if err != nil {
 		log.Debugf("Couldn't create kubernetes WhoAmI client, skipping OpenSearch logs url output. Error: %s", err.Error())
@@ -183,10 +183,10 @@ func initLogUrlGenerator(ctx context.Context, kubeconfigClient *restclient.Confi
 				return
 			}
 
-			_, err = lipgloss.Println(style.BoldStyle.Render("View logs in OpenSearch:"))
+			_, err = lipgloss.Fprintln(outputTo, style.BoldStyle.Render("View logs in OpenSearch:"))
 			cobra.CheckErr(err)
 
-			_, err = lipgloss.Println(style.RenderHyperLink(url))
+			_, err = lipgloss.Fprintln(outputTo, style.RenderHyperLink(url))
 			cobra.CheckErr(err)
 		}
 	}, nil

@@ -196,8 +196,8 @@ var _ = Describe("jobrequest logs", func() {
 			Expect(setJobStartTime(ctx, job)).To(Succeed())
 
 			Eventually(session.Err, "10s").Should(gbytes.Say("Tailing logs from pod"))
-			Eventually(session.Err, "10s").Should(gbytes.Say("migration started"))
-			Eventually(session.Err, "10s").Should(gbytes.Say("migration finished"))
+			Eventually(session.Out, "10s").Should(gbytes.Say("migration started"))
+			Eventually(session.Out, "10s").Should(gbytes.Say("migration finished"))
 		})
 
 		It("when not following the logs prints the pod's logs and also a Logit link", func(ctx SpecContext) {

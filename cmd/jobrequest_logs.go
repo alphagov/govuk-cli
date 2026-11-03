@@ -54,7 +54,7 @@ govuk-cli jobrequest logs <jobrequest> --follow`,
 			os.Exit(1)
 		}
 
-		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client)
+		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client, os.Stderr)
 		if err != nil {
 			log.Error("Error creating kube client for whoami", "error", err)
 			os.Exit(1)
@@ -101,17 +101,17 @@ govuk-cli jobrequest logs <jobrequest> --follow`,
 			outputLogsUrl(jr)
 			os.Exit(1)
 		} else {
-			_, err = lipgloss.Printf("--- LOGS END ---\n\n")
+			_, err = lipgloss.Fprintf(os.Stderr, "--- LOGS END ---\n\n")
 			cobra.CheckErr(err)
 		}
 
 		if jr.Status.JobName != "" {
 			kubectlCommand := fmt.Sprintf("$ kubectl -n %s logs -f %s", shellescape.Quote(namespace), shellescape.Quote(fmt.Sprintf("job/%s", jr.Status.JobName)))
-			_, err = lipgloss.Println(style.BoldStyle.Render("Print logs:"))
+			_, err = lipgloss.Fprintln(os.Stderr, style.BoldStyle.Render("Print logs:"))
 			cobra.CheckErr(err)
-			_, err = lipgloss.Println(style.CommandStyle.Render(kubectlCommand))
+			_, err = lipgloss.Fprintln(os.Stderr, style.CommandStyle.Render(kubectlCommand))
 			cobra.CheckErr(err)
-			_, err = lipgloss.Println("")
+			_, err = lipgloss.Fprintln(os.Stderr, "")
 			cobra.CheckErr(err)
 
 			outputLogsUrl(jr)
