@@ -1,10 +1,8 @@
 package jobrequest
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"sort"
 
 	"charm.land/log/v2"
@@ -174,29 +172,6 @@ func awaitPod(c *JobRequestClient, jobName string) (*corev1.Pod, error) {
 	}
 }
 
-func streamLogs(c *JobRequestClient, podName string) error {
-	logs := c.clientSet.CoreV1().Pods(c.namespace).GetLogs(
-		podName,
-		&corev1.PodLogOptions{Follow: true},
-	)
-	stream, err := logs.Stream(c.ctx)
-	if err != nil {
-		return err
-	}
-	defer stream.Close() //nolint:errcheck
-	reader := bufio.NewReader(stream)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return err
-		}
-		print(line)
-	}
-}
-
 func (c *JobRequestClient) FollowJobRequest(jobRequestName string) error {
 	log.Info("Following JobRequest. Logs will stream once Job has started...", "jobRequestName", jobRequestName)
 	jr, err := awaitJobRequest(c, jobRequestName)
@@ -217,7 +192,7 @@ func (c *JobRequestClient) FollowJobRequest(jobRequestName string) error {
 	}
 
 	log.Info("Tailing logs from pod...", "pod", pod.Name)
-	err = streamLogs(c, pod.Name)
+	err = streamLogs(c, pod.Name, FollowLogs)
 
 	return err
 }
