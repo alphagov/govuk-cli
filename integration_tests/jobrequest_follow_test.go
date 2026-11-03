@@ -40,6 +40,17 @@ func suspendedJob(name string, namespace string) *batchv1.Job {
 	}
 }
 
+func completedJob(name string, namespace string) *batchv1.Job {
+	job := suspendedJob(name, namespace)
+	job.Status.Conditions = append(job.Status.Conditions, batchv1.JobCondition{
+		Status: "True",
+		Type:   batchv1.JobComplete,
+	})
+	job.Status.Succeeded = 1
+	return job
+
+}
+
 // pendingPod returns a Pod carrying the job-name label the CLI uses to find a
 // Job's pods. It has no node assigned, so nothing in the cluster moves it out
 // of the Pending phase.
