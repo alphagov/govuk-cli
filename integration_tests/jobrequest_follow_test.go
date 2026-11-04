@@ -608,8 +608,8 @@ var _ = Describe("jobrequest get --follow", func() {
 
 			// The CLI streams log lines with the builtin print, which writes
 			// to stderr.
-			Eventually(session.Err, "10s").Should(gbytes.Say("migration started"))
-			Eventually(session.Err, "10s").Should(gbytes.Say("migration finished"))
+			Eventually(session.Out, "10s").Should(gbytes.Say("migration started"))
+			Eventually(session.Out, "10s").Should(gbytes.Say("migration finished"))
 		})
 	})
 
