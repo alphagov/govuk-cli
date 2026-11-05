@@ -71,7 +71,7 @@ Comment: LGTM
 │ Decision         │ Approved                │
 │ Comment          │ LGTM                    │
 └──────────────────┴─────────────────────────┘
-Submit review? [Y/n]:
+Submit review? (y/n):
 ```
 
 #### View job request details

@@ -211,7 +211,7 @@ func parseDecisionInput(reader *bufio.Reader) jrv1.JobRequestReviewState {
 // Returns nothing if approved, exits if not.
 func parseSubmitInput(reader *bufio.Reader) {
 	for {
-		_, err := lipgloss.Print(style.BoldStyle.Render("Submit review? [Y/n]: "))
+		_, err := lipgloss.Print(style.BoldStyle.Render("Submit review? (y/n): "))
 		cobra.CheckErr(err)
 
 		submitInput, err := reader.ReadString('\n')

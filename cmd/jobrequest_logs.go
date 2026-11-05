@@ -54,7 +54,7 @@ govuk-cli jobrequest logs <jobrequest> --follow`,
 			os.Exit(1)
 		}
 
-		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client)
+		outputLogsUrl, err := initLogUrlGenerator(ctx, kubeConfig, client, os.Stderr)
 		if err != nil {
 			log.Error("Error creating kube client for whoami", "error", err)
 			os.Exit(1)
@@ -78,22 +78,43 @@ govuk-cli jobrequest logs <jobrequest> --follow`,
 			os.Exit(1)
 		}
 
-		if jr.Status.JobName != "" && !follow {
-			kubectlCommand := fmt.Sprintf("$ kubectl -n %s logs -f %s", shellescape.Quote(namespace), shellescape.Quote(fmt.Sprintf("job/%s", jr.Status.JobName)))
-			_, err = lipgloss.Println(style.BoldStyle.Render("Print logs:"))
+		if follow {
+			err = client.FollowJobRequest(jobRequestName)
+		} else {
+			if !jr.HasBeenReviewed() {
+				_, err := lipgloss.Println("JobRequest has not yet been reviewed, cannot print the logs, specify --follow if you want to watch the status of the JobRequest")
+				cobra.CheckErr(err)
+				os.Exit(1)
+			}
+			if jr.HasBeenRejected() {
+				_, err := lipgloss.Println("JobRequest was Rejected, there are no logs to print")
+				cobra.CheckErr(err)
+				os.Exit(1)
+			}
+			err = client.PrintLogs(jr)
+		}
+
+		if err != nil {
+			log.Error("Error printing job request logs", "error", err)
+			_, err = lipgloss.Printf("\n")
 			cobra.CheckErr(err)
-			_, err = lipgloss.Println(style.CommandStyle.Render(kubectlCommand))
+			outputLogsUrl(jr)
+			os.Exit(1)
+		} else {
+			_, err = lipgloss.Fprintf(os.Stderr, "--- LOGS END ---\n\n")
+			cobra.CheckErr(err)
+		}
+
+		if jr.Status.JobName != "" {
+			kubectlCommand := fmt.Sprintf("$ kubectl -n %s logs -f %s", shellescape.Quote(namespace), shellescape.Quote(fmt.Sprintf("job/%s", jr.Status.JobName)))
+			_, err = lipgloss.Fprintln(os.Stderr, style.BoldStyle.Render("Print logs:"))
+			cobra.CheckErr(err)
+			_, err = lipgloss.Fprintln(os.Stderr, style.CommandStyle.Render(kubectlCommand))
+			cobra.CheckErr(err)
+			_, err = lipgloss.Fprintln(os.Stderr, "")
 			cobra.CheckErr(err)
 
 			outputLogsUrl(jr)
-		}
-
-		if follow {
-			err = client.FollowJobRequest(jobRequestName)
-			if err != nil {
-				log.Error("Error following job request", "error", err)
-				os.Exit(1)
-			}
 		}
 	},
 }
