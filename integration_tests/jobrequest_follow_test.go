@@ -48,7 +48,6 @@ func completedJob(name string, namespace string) *batchv1.Job {
 	})
 	job.Status.Succeeded = 1
 	return job
-
 }
 
 // pendingPod returns a Pod carrying the job-name label the CLI uses to find a
@@ -160,6 +159,39 @@ var _ = Describe("jobrequest get --follow", func() {
 		It("exits with a rejected error", func(ctx SpecContext) {
 			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
 			jr.Status.State = jrv1.JobRequestRejected
+			Expect(createJobRequest(ctx, jr)).To(Succeed())
+
+			DeferCleanup(func(ctx SpecContext) {
+				Expect(deleteJobRequest(ctx, jr)).To(Succeed())
+			})
+
+			cmd, err := cliCmd(ctx, "jobrequest", "get", jobRequestName, "--follow", "--kubeconfig", kubeconfigPath, "--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := cmd.CombinedOutput()
+			Expect(err).To(MatchError("exit status 1"))
+
+			Expect(string(output)).To(ContainSubstring("job request '" + jobRequestName + "' has been rejected"))
+		})
+	})
+
+	Context("when the JobRequest is in RejectedComplete state", func() {
+		const jobRequestName = "follow-rejected"
+		const namespace = "apps"
+
+		BeforeEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesUser(ctx, JobRequesterUser)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func(ctx SpecContext) {
+			err := SwitchToKubernetesAdminUser(ctx)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("exits with a rejected error", func(ctx SpecContext) {
+			jr := pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
+			jr.Status.State = jrv1.JobRequestRejectedComplete
 			Expect(createJobRequest(ctx, jr)).To(Succeed())
 
 			DeferCleanup(func(ctx SpecContext) {
