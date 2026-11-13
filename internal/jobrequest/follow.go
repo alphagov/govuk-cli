@@ -75,7 +75,7 @@ func awaitJobRequest(c *JobRequestClient, jobRequestName string) (*jrv1.JobReque
 
 					continue
 				}
-			case jrv1.JobRequestRejected:
+			case jrv1.JobRequestRejected, jrv1.JobRequestRejectedComplete:
 				log.Debug("job request rejected", "jr", jobRequestName)
 				return nil, fmt.Errorf("job request '%s' has been rejected", jobRequestName)
 			case jrv1.JobRequestMalformed:
