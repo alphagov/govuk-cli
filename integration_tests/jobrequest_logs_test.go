@@ -58,7 +58,6 @@ var _ = Describe("jobrequest logs", Ordered, func() {
 		if jobRequestReview != nil {
 			Expect(deleteJobRequestReview(ctx, jobRequestReview)).To(Succeed())
 		}
-
 	})
 
 	Context("when the job request does not exist", Ordered, func() {
@@ -103,6 +102,31 @@ var _ = Describe("jobrequest logs", Ordered, func() {
 				session.Kill().Wait()
 			})
 			Expect(session.Wait("2s").Out).Should(gbytes.Say("JobRequest has not yet been reviewed"))
+			Expect(session.ExitCode()).To(Equal(1))
+		})
+	})
+
+	Context("when the JobRequest is in Rejecting state", Ordered, func() {
+		It("gives an error saying the JobRequest was rejected", func(ctx SpecContext) {
+			Expect(SwitchToKubernetesUser(ctx, JobRequesterUser)).To(Succeed())
+
+			jobRequest = pendingJobRequest(jobRequestName, namespace, JobRequesterUser.ARN)
+			jobRequest.Status.State = jrv1.JobRequestRejecting
+			Expect(createJobRequest(ctx, jobRequest)).To(Succeed())
+
+			cmd, err := cliCmd(ctx,
+				"jobrequest", "logs", jobRequestName,
+				"--kubeconfig", kubeconfigPath,
+				"--namespace", namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			DeferCleanup(func() {
+				session.Kill().Wait()
+			})
+			Expect(session.Wait("2s").Out).Should(gbytes.Say("JobRequest was Rejected"))
 			Expect(session.ExitCode()).To(Equal(1))
 		})
 	})
@@ -225,7 +249,6 @@ var _ = Describe("jobrequest logs", Ordered, func() {
 				),
 			)
 		})
-
 	})
 
 	Context("when the Job exists but the pod has been garbage collected", func() {
