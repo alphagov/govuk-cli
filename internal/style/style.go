@@ -57,7 +57,7 @@ func listTableStyleFunc(row int, col int) lipgloss.Style {
 
 func RenderHyperLink(url string) string {
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#00FFFF")).
+		Foreground(lipgloss.Cyan).
 		Underline(true).
 		Hyperlink(url).Render(url)
 }
