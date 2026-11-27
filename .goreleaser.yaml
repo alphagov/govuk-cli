@@ -64,7 +64,7 @@ homebrew_casks:
       token: "{{ .Env.GITHUB_PAT_HOMEBREW }}"
     hooks:
       post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/govuk-cli"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/govuk-cli"]
           end
